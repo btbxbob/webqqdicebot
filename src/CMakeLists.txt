@@ -13,10 +13,14 @@ set(LWQQ_LIST
 add_library(webqq MODULE
 	${LWQQ_LIST}
 	)
+target_link_libraries(
+	webqq
+	${CURL_LIBRARIES}
+	)
 include_directories(
 	liblwqq
 	)
-target_link_libraries(webqq
-	${CURL_LIBRARIES}
-	)
+
 add_executable (webqqdicebot webqqdicebot.c)
+
+
