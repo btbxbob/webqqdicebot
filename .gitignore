@@ -1,17 +1,16 @@
-# Object files
 *.o
-
-# Libraries
 *.lib
 *.a
-
-# Shared objects (inc. Windows DLLs)
 *.dll
 *.so
 *.so.*
 *.dylib
-
-# Executables
 *.exe
 *.out
 *.app
+CMakeFiles
+CMakeCache.txt
+CMakeLists.txt~
+README.md~
+cmake_install.cmake
+Makefile
