@@ -16,4 +16,7 @@ add_library(webqq MODULE
 include_directories(
 	liblwqq
 	)
+target_link_libraries(webqq
+	${CURL_LIBRARIES}
+	)
 add_executable (webqqdicebot webqqdicebot.c)
