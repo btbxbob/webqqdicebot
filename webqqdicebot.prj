@@ -24,9 +24,15 @@ long_line_column=72
 
 [files]
 current_page=0
-FILE_NAME_0=4148;C;0;16;1;1;0;%2Fhome%2Fbx%2Fsrc%2Fwebqqdicebot%2Fsrc%2Fwebqqdicebot.c;0;4
-FILE_NAME_1=182;C;0;16;1;1;0;%2Fhome%2Fbx%2Fsrc%2Flwqq%2Fsrc%2Fcli%2Fcli.c;0;4
-FILE_NAME_2=491;CMake;0;16;1;1;0;%2Fhome%2Fbx%2Fsrc%2Fwebqqdicebot%2Fsrc%2FCMakeLists.txt;0;4
+FILE_NAME_0=386;C;0;16;1;1;0;%2Fhome%2Fbx%2Fsrc%2Fwebqqdicebot%2Fsrc%2Fwebqqdicebot.c;0;4
+FILE_NAME_1=281;C;0;16;1;1;0;%2Fhome%2Fbx%2Fsrc%2Flwqq%2Fsrc%2Fcli%2Fcli.c;0;4
+FILE_NAME_2=406;CMake;0;16;1;1;0;%2Fhome%2Fbx%2Fsrc%2Fwebqqdicebot%2Fsrc%2FCMakeLists.txt;0;4
+FILE_NAME_3=205;C;0;16;1;1;0;%2Fhome%2Fbx%2Fsrc%2Fwebqqdicebot%2Fsrc%2Fliblwqq%2Fmsg.h;0;4
+FILE_NAME_4=221;C;0;16;1;1;0;%2Fhome%2Fbx%2Fsrc%2Fwebqqdicebot%2Fsrc%2Fliblwqq%2Ftype.h;0;4
+FILE_NAME_5=55747;C;0;16;1;1;0;%2Fhome%2Fbx%2Fsrc%2Fwebqqdicebot%2Fsrc%2Fliblwqq%2Fmsg.c;0;4
+FILE_NAME_6=12740;C;0;16;1;1;0;%2Fhome%2Fbx%2Fsrc%2Fwebqqdicebot%2Fsrc%2Fliblwqq%2Flogin.c;0;4
+FILE_NAME_7=40121;C;0;16;1;1;0;%2Fhome%2Fbx%2Fsrc%2Fwebqqdicebot%2Fsrc%2Fliblwqq%2Finfo.c;0;4
+FILE_NAME_8=4606;C;0;16;1;1;0;%2Fhome%2Fbx%2Fsrc%2Fwebqqdicebot%2Fsrc%2Fliblwqq%2Fasync.h;0;4
 
 [VTE]
 last_dir=/home/bx
@@ -40,5 +46,8 @@ NF_01_CM=make
 NF_01_WD=
 CFT_01_LB=生成(_B)
 CFT_01_CM=make
-CFT_01_WD=
+CFT_01_WD=/home/bx/src/webqqdicebot/
 filetypes=C;
+CFT_02_LB=CMAKE生成
+CFT_02_CM=cmake .
+CFT_02_WD=/home/bx/src/webqqdicebot/
