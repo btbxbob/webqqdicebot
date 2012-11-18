@@ -1,3 +1,6 @@
+add_subdirectory(libghttp)
+include_directories (${LIBGHTTP_SOURCE_DIR}/libghttp)  
+link_directories (${LIBGHTTP_BINARY_DIR}/libghttp) 
 
 set(LWQQ_LIST
   liblwqq/url.c
@@ -9,18 +12,26 @@ set(LWQQ_LIST
   liblwqq/msg.c
   liblwqq/type.c
   liblwqq/smemory.c
-  liblwqq/info.c)
-add_library(webqq MODULE
+  liblwqq/info.c
+  liblwqq/http.c
+  liblwqq/http_curl.c
+  )
+add_library(liblwqq
 	${LWQQ_LIST}
 	)
-target_link_libraries(
-	webqq
-	${CURL_LIBRARIES}
-	)
+
 include_directories(
 	liblwqq
+	libghttp
+	${GLIB_INCLUDE_DIRS}
 	)
 
 add_executable (webqqdicebot webqqdicebot.c)
 
-
+target_link_libraries(
+	webqqdicebot
+	liblw
+	libghttp
+	${CURL_LIBRARIES}
+	${GLIB_LIBRARIES}
+	)

@@ -274,6 +274,7 @@ static int lwqq_http_do_request(LwqqHttpRequest *request, int method, char *body
         if (buf) {
             len = ghttp_get_body_len(request->req);
             *resp = s_realloc(*resp, have_read_bytes + len);
+	         request->resp_len = have_read_bytes + len;
             memcpy(*resp + have_read_bytes, buf, len);
             have_read_bytes += len;
         }
@@ -366,6 +367,7 @@ typedef struct AsyncWatchData
     LwqqHttpRequest *request;
     LwqqAsyncCallback callback;
     void *data;
+    int handle;
 } AsyncWatchData;
 
 static pthread_t lwqq_async_tid;
@@ -396,6 +398,8 @@ static void ev_io_come(EV_P_ ev_io* w,int revent)
 
 
     int status = ghttp_process(req);
+    if (status == ghttp_not_done)
+        return;
     if (status == ghttp_error) {
         ec = LWQQ_EC_ERROR;
         goto done;
@@ -447,7 +451,8 @@ done:
     }
 
     /* Callback */
-    d->callback(ec, lhr->response, d->data);
+    if(d->callback)
+        d->callback(d->request, d->data);
 
     /* OK, exit this request */
     ev_io_stop(EV_DEFAULT, w);

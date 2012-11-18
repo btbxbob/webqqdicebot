@@ -1,3 +1,13 @@
+/src/libghttp/.deps/libghttp_la-ghttp.Plo
+/src/libghttp/.deps/libghttp_la-http_base64.Plo
+/src/libghttp/.deps/libghttp_la-http_date.Plo
+/src/libghttp/.deps/libghttp_la-http_hdrs.Plo
+/src/libghttp/.deps/libghttp_la-http_req.Plo
+/src/libghttp/.deps/libghttp_la-http_resp.Plo
+/src/libghttp/.deps/libghttp_la-http_trans.Plo
+/src/libghttp/.deps/libghttp_la-http_uri.Plo
+/src/libghttp/.libs/libghttp.la
+/src/libghttp/.libs/libghttp.lai
 *.o
 *.lib
 *.a
