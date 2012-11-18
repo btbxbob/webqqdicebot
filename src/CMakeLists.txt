@@ -13,7 +13,8 @@ set(LWQQ_LIST
   liblwqq/type.c
   liblwqq/smemory.c
   liblwqq/info.c
-  liblwqq/http.c
+  liblwqq/async.c
+  #liblwqq/http.c
   liblwqq/http_curl.c
   )
 add_library(liblwqq
@@ -24,14 +25,16 @@ include_directories(
 	liblwqq
 	libghttp
 	${GLIB_INCLUDE_DIRS}
+	${CURL_INCLUDE_DIRS}
 	)
 
 add_executable (webqqdicebot webqqdicebot.c)
 
 target_link_libraries(
 	webqqdicebot
-	liblw
+	liblwqq
 	libghttp
+	ev
 	${CURL_LIBRARIES}
 	${GLIB_LIBRARIES}
 	)

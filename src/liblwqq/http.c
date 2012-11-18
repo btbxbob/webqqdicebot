@@ -53,7 +53,6 @@ static char *lwqq_http_get_header(LwqqHttpRequest *request, const char *name)
 
     const char *h = ghttp_get_header(request->req, name);
     if (!h) {
-        lwqq_log(LOG_WARNING, "Cant get http header: %s\n", name);
         return NULL;
     }
 
@@ -274,7 +273,6 @@ static int lwqq_http_do_request(LwqqHttpRequest *request, int method, char *body
         if (buf) {
             len = ghttp_get_body_len(request->req);
             *resp = s_realloc(*resp, have_read_bytes + len);
-	         request->resp_len = have_read_bytes + len;
             memcpy(*resp + have_read_bytes, buf, len);
             have_read_bytes += len;
         }
@@ -367,7 +365,6 @@ typedef struct AsyncWatchData
     LwqqHttpRequest *request;
     LwqqAsyncCallback callback;
     void *data;
-    int handle;
 } AsyncWatchData;
 
 static pthread_t lwqq_async_tid;
@@ -398,8 +395,6 @@ static void ev_io_come(EV_P_ ev_io* w,int revent)
 
 
     int status = ghttp_process(req);
-    if (status == ghttp_not_done)
-        return;
     if (status == ghttp_error) {
         ec = LWQQ_EC_ERROR;
         goto done;
@@ -451,8 +446,7 @@ done:
     }
 
     /* Callback */
-    if(d->callback)
-        d->callback(d->request, d->data);
+    d->callback(ec, lhr->response, d->data);
 
     /* OK, exit this request */
     ev_io_stop(EV_DEFAULT, w);

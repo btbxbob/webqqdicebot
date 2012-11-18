@@ -44,6 +44,12 @@ void *s_realloc(void *ptr, size_t size)
     return realloc(ptr, size);
 }
 
+void s_free(void *ptr)
+{
+    if (ptr)
+        free(ptr);
+}
+
 char *s_strdup(const char *s1)
 {
     if (!s1)
@@ -76,16 +82,4 @@ int s_asprintf(char **buf, const char *format, ...)
 	va_end(arg);
 
     return rv;
-}
-int s_atoi(const char* s)
-{
-    if(s) return atoi(s);
-    perror("atoi failed");
-    return 0;
-}
-int s_atol(const char* s)
-{
-    if(s) return atol(s);
-    perror("atol failed");
-    return 0;
 }

@@ -7,5 +7,8 @@ set (GHTTP_LIST
   http_resp.c
   http_trans.c
   http_uri.c
-)
+  )
+include_directories(
+  .
+  )
 add_library(libghttp ${GHTTP_LIST})

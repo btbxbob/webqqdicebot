@@ -11,10 +11,6 @@
 
 #include <string.h>
 #include <ctype.h>
-#include <stdlib.h>
-#include <iconv.h>
-
-#include "smemory.h"
 
 /* Converts a hex character to its integer value */
 static char from_hex(char ch)
@@ -43,24 +39,7 @@ char *url_encode(char *str)
     
     char *pstr = str, *buf = malloc(strlen(str) * 3 + 1), *pbuf = buf;
     while (*pstr) {
-        if (isalnum(*pstr) || *pstr == '-' || *pstr == '_' || *pstr == '.' || *pstr == '~' ) 
-            *pbuf++ = *pstr;
-        else 
-            *pbuf++ = '%', *pbuf++ = to_hex(*pstr >> 4), *pbuf++ = to_hex(*pstr & 15);
-        pstr++;
-    }
-    *pbuf = '\0';
-    return buf;
-}
-char *url_whole_encode(char *str)
-{
-    if (!str)
-        return NULL;
-    
-    char *pstr = str, *buf = malloc(strlen(str) * 3 + 1), *pbuf = buf;
-    while (*pstr) {
-        if (isalnum(*pstr) || *pstr == '-' || *pstr == '_' || *pstr == '.' || *pstr == '~' ||*pstr == ':' ||*pstr == '/'
-                || *pstr == '&'|| *pstr == '=' || *pstr == '?') 
+        if (isalnum(*pstr) || *pstr == '-' || *pstr == '_' || *pstr == '.' || *pstr == '~') 
             *pbuf++ = *pstr;
         else 
             *pbuf++ = '%', *pbuf++ = to_hex(*pstr >> 4), *pbuf++ = to_hex(*pstr & 15);
@@ -99,21 +78,15 @@ char *url_decode(char *str)
     *pbuf = '\0';
     return buf;
 }
-/*
-char* to_gbk(char* utf8)
+
+#if 0
+int main(int argc, char *argv[])
 {
-    char buf[512];
-    iconv_t cd = iconv_open("gbk","utf-8");
-
-    char* inbuf = utf8;
-    size_t inlen = strlen(utf8);
-    char* outbuf = buf;
-    size_t outlen = sizeof(buf);
-    iconv(cd,&inbuf,&inlen,&outbuf,&outlen);
-    iconv_close(cd);
-    if(inlen!=0) return NULL;
-    *outbuf = '\0';
-    return s_strdup(buf);
+    char *buf = url_encode("http://www.-go8ogle. com");
+    if (buf) {
+        lwqq_log(LOG_NOTICE, "Encode data: %s\n", buf);
+    } else 
+    puts(buf);
+    return 0;
 }
-
-*/
+#endif

@@ -1,11 +1,9 @@
 #include <string.h>
 #include <zlib.h>
-#include <ev.h>
-//#include <eventloop.h>
 #include <stdio.h>
 #include <curl/curl.h>
-//#include <plugin.h>
 #include <stdlib.h>
+#include <assert.h>
 #include "async.h"
 #include "smemory.h"
 #include "http.h"
@@ -28,13 +26,8 @@ typedef struct GLOBAL {
     CURLM* multi;
     CURLSH* share;
     pthread_mutex_t share_lock[2];
-    //struct ev_loop* loop;
     int still_running;
-    ev_timer timer_event;
-    LIST_HEAD(,CURLPOOL) easy_pool;
-	 pthread_t tid;
-	 pthread_cond_t cond ;
-    int async_running ;
+    LwqqAsyncTimer timer_event;
 }GLOBAL;
 GLOBAL global;
 
@@ -45,15 +38,14 @@ typedef struct S_ITEM {
     CURL *easy;
     /**@brief ev重用标志,一直为1 */
     int evset;
-    int ev;
+    LwqqAsyncIo ev;
 }S_ITEM;
 typedef struct D_ITEM{
     LwqqAsyncCallback callback;
     LwqqHttpRequest* req;
     LwqqAsyncEvent* event;
     void* data;
-    //LwqqHttpRequest* req;
-    ev_timer delay;
+    LwqqAsyncTimer delay;
 }D_ITEM;
 /* For async request */
 static LwqqAsyncEvent* lwqq_http_do_request_async(struct LwqqHttpRequest *request, int method,
@@ -119,20 +111,8 @@ static const char *lwqq_http_get_header(LwqqHttpRequest *request, const char *na
         }
         list = list->next;
     }
-    if (!h) {
-        lwqq_log(LOG_WARNING, "Cant get http header: %s\n", name);
-        return NULL;
-    }
 
     return h;
-}
-static void lwqq_http_print_header(LwqqHttpRequest* request)
-{
-    struct curl_slist* list = request->recv_head;
-    while(list!=NULL){
-        puts(list->data);
-        list = list->next;
-    }
 }
 
 static char *lwqq_http_get_cookie(LwqqHttpRequest *request, const char *name)
@@ -151,13 +131,12 @@ static char *lwqq_http_get_cookie(LwqqHttpRequest *request, const char *name)
         }
         list = list->next;
     }
-    printf("cookie:%s\n",cookie);
     if (!cookie) {
         lwqq_log(LOG_WARNING, "No cookie: %s\n", name);
         return NULL;
     }
 
-    lwqq_log(LOG_DEBUG, "Parse Cookie: %s=%s\n", name, cookie);
+    //lwqq_log(LOG_DEBUG, "Parse Cookie: %s=%s\n", name, cookie);
     return s_strdup(cookie);
 }
 /** 
@@ -179,7 +158,6 @@ void lwqq_http_request_free(LwqqHttpRequest *request)
         curl_formfree(request->form_start);
         if(request->req)
             curl_easy_cleanup(request->req);
-        //LIST_INSERT_HEAD(&global.easy_pool,(CURLPOOL*)request->req,entries);
         s_free(request);
     }
 }
@@ -271,6 +249,8 @@ LwqqHttpRequest *lwqq_http_request_new(const char *uri)
     curl_easy_setopt(request->req,CURLOPT_WRITEDATA,request);
     curl_easy_setopt(request->req,CURLOPT_NOSIGNAL,1);
     curl_easy_setopt(request->req,CURLOPT_FOLLOWLOCATION,1);
+    //curl_easy_setopt(request->req,CURLOPT_LOW_SPEED_LIMIT,10);
+    //curl_easy_setopt(request->req,CURLOPT_LOW_SPEED_TIME,60);
     //curl_easy_setopt(request->req,CURLOPT_CONNECTTIMEOUT,60);
     request->do_request = lwqq_http_do_request;
     request->do_request_async = lwqq_http_do_request_async;
@@ -405,7 +385,7 @@ LwqqHttpRequest *lwqq_http_create_default_request(const char *url,
     }
 
     req->set_default_header(req);
-    lwqq_log(LOG_DEBUG, "Create request object for url: %s sucessfully\n", url);
+    //lwqq_log(LOG_DEBUG, "Create request object for url: %s sucessfully\n", url);
     return req;
 }
 
@@ -463,6 +443,7 @@ static void check_multi_info(GLOBAL *g)
     D_ITEM *conn;
     CURL *easy;
 
+    //printf("still_running:%d\n",g->still_running);
     while ((msg = curl_multi_info_read(g->multi, &msgs_left))) {
         if (msg->msg == CURLMSG_DONE) {
             easy = msg->easy_handle;
@@ -476,67 +457,75 @@ static void check_multi_info(GLOBAL *g)
         }
     }
 }
-static void timer_cb(EV_P_ struct ev_timer *w, int revents)
+static int timer_cb(void* data)
 {
     //这个表示有超时任务出现.
-    GLOBAL* g = w->data;
+    GLOBAL* g = data;
+    //printf("timeout_come\n");
 
     if(!g->multi) return 0;
     curl_multi_socket_action(g->multi, CURL_SOCKET_TIMEOUT, 0, &g->still_running);
+    printf("still running:%d\n",g->still_running);
     check_multi_info(g);
-    return 0;
+    //this is inner timeout 
+    //always keep it
+    return 1;
 }
 static int multi_timer_cb(CURLM *multi, long timeout_ms, void *userp)
 {
+    //this function call only when timeout clock '''changed'''.
+    //called by curl
     GLOBAL* g = userp;
-    ev_timer_stop(EV_DEFAULT, &g->timer_event);
+    //printf("timer_cb:%ld\n",timeout_ms);
+    lwqq_async_timer_stop(&g->timer_event);
     if (timeout_ms > 0) {
-        double t = timeout_ms / 1000.0;
-        ev_timer_init(&g->timer_event,timer_cb,t,0.);
-        ev_timer_start(EV_DEFAULT, &g->timer_event);
-    } else if(timeout_ms==0)
-        timer_cb(EV_DEFAULT, &g->timer_event, 0);
-    else{}
+        //change time clock
+        lwqq_async_timer_watch(&g->timer_event,timeout_ms,timer_cb,g);
+    } else{
+        //keep time clock
+        timer_cb(g);
+    }
+    //close time clock
+    //this should always return 0 this is curl!!
     return 0;
 }
-static void event_cb(EV_P_ struct ev_io *w, int revents)
+static void event_cb(void* data,int fd,int revents)
 {
-    GLOBAL* g = w->data;
+    GLOBAL* g = data;
 
-    int action = (revents&EV_READ?CURL_POLL_IN:0)|
-                 (revents&EV_WRITE?CURL_POLL_OUT:0);
-    curl_multi_socket_action(g->multi, w->fd, action, &g->still_running);
+    int action = (revents&LWQQ_ASYNC_READ?CURL_POLL_IN:0)|
+                 (revents&LWQQ_ASYNC_WRITE?CURL_POLL_OUT:0);
+    curl_multi_socket_action(g->multi, fd, action, &g->still_running);
     check_multi_info(g);
     if ( g->still_running <= 0 ) {
-        ev_timer_stop(EV_DEFAULT, &g->timer_event);
+        lwqq_async_timer_stop(&g->timer_event);
     }
 }
 static void setsock(S_ITEM*f, curl_socket_t s, CURL*e, int act,GLOBAL* g)
 {
-    int kind = (act&CURL_POLL_IN?EV_READ:0)|(act&CURL_POLL_OUT?EV_WRITE:0);
-    ev_io *io;
-    io->events=f->ev;
+    //int kind = ((act&CURL_POLL_IN)?LWQQ_ASYNC_READ:0)|((act&CURL_POLL_OUT)?LWQQ_ASYNC_WRITE:0);
+    //printf("kind:%d\n",kind);
 
     f->sockfd = s;
     f->action = act;
     f->easy = e;
     if ( f->evset )
-        ev_io_stop(EV_DEFAULT ,io);
-    ev_io_init(&f->ev, event_cb, f->sockfd, kind);
-    f->ev.data = g;
+        lwqq_async_io_stop(&f->ev);
+    //since read+write works fine. we find out 'kind' not worked when have time
+    lwqq_async_io_watch(&f->ev,f->sockfd,LWQQ_ASYNC_READ|LWQQ_ASYNC_WRITE,event_cb,g);
     f->evset=1;
-    ev_io_start(EV_DEFAULT, io);
 }
 static int sock_cb(CURL* e,curl_socket_t s,int what,void* cbp,void* sockp)
 {
     S_ITEM *si = (S_ITEM*)sockp;
+    //D_ITEM *di;
     GLOBAL* g = cbp;
 
     if(what == CURL_POLL_REMOVE) {
         //清除socket关联对象
         if ( si ) {
             if ( si->evset )
-                ev_io_stop(EV_DEFAULT, &si->ev);
+                lwqq_async_io_stop(&si->ev);
             s_free(si);
         }
     } else {
@@ -556,10 +545,10 @@ static int delay_add_handle(void* data)
 {
     D_ITEM* di = data;
     CURLMcode rc = curl_multi_add_handle(global.multi,di->req->req);
+
     if(rc != CURLM_OK){
         puts(curl_multi_strerror(rc));
     }
-    ev_timer_stop(EV_DEFAULT,w);
     return 0;
 }
 static LwqqAsyncEvent* lwqq_http_do_request_async(struct LwqqHttpRequest *request, int method,
@@ -606,7 +595,7 @@ static LwqqAsyncEvent* lwqq_http_do_request_async(struct LwqqHttpRequest *reques
     di->req = request;
     di->data = data;
     di->event = lwqq_async_event_new(request);
-    purple_timeout_add(50,delay_add_handle,di);
+    lwqq_async_timer_watch(&di->delay,100,delay_add_handle,di);
     return di->event;
 
 failed:
@@ -794,21 +783,6 @@ static void lwqq_http_add_file_content(LwqqHttpRequest* request,const char* name
     curl_easy_setopt(request->req,CURLOPT_HTTPPOST,request->form_start);
 }
 
-void lwqq_http_set_timeout(LwqqHttpRequest* req,int time_out)
-{
-    curl_easy_setopt(req->req,CURLOPT_TIMEOUT,time_out);
-}
-
-void lwqq_http_not_follow(LwqqHttpRequest* req)
-{
-    curl_easy_setopt(req->req,CURLOPT_FOLLOWLOCATION, 0L);
-    //curl_easy_setopt(req->req,CURLOPT_VERBOSE,1L);
-}
-void lwqq_http_save_file(LwqqHttpRequest* req,FILE* file)
-{
-    curl_easy_setopt(req->req,CURLOPT_WRITEFUNCTION,NULL);
-    curl_easy_setopt(req->req,CURLOPT_WRITEDATA,file);
-}
 static int lwqq_http_progress_trans(void* d,double dt,double dn,double ut,double un)
 {
     LwqqHttpRequest* req = d;
@@ -827,7 +801,24 @@ void lwqq_http_on_progress(LwqqHttpRequest* req,LWQQ_PROGRESS progress,void* pro
     curl_easy_setopt(req->req,CURLOPT_NOPROGRESS,0L);
 }
 
-void lwqq_http_reset_url(LwqqHttpRequest* req,const char* url)
+void lwqq_http_set_option(LwqqHttpRequest* req,LwqqHttpOption opt,...)
 {
-    curl_easy_setopt(req->req,CURLOPT_URL,url);
+    va_list args;
+    va_start(args,opt);
+    switch(opt){
+        case LWQQ_HTTP_TIMEOUT:
+            curl_easy_setopt(req->req,CURLOPT_TIMEOUT,va_arg(args,unsigned long));
+            break;
+        case LWQQ_HTTP_NOT_FOLLOW:
+            curl_easy_setopt(req->req,CURLOPT_FOLLOWLOCATION,!va_arg(args,long));
+            break;
+        case LWQQ_HTTP_SAVE_FILE:
+            curl_easy_setopt(req->req,CURLOPT_WRITEFUNCTION,NULL);
+            curl_easy_setopt(req->req,CURLOPT_WRITEDATA,va_arg(args,FILE*));
+            break;
+        case LWQQ_HTTP_RESET_URL:
+            curl_easy_setopt(req->req,CURLOPT_URL,va_arg(args,const char*));
+            break;
+    }
+    va_end(args);
 }

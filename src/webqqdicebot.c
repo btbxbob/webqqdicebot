@@ -15,7 +15,7 @@
 
 //lc:lwqq client
 static LwqqClient *lc = NULL;
-static LWQQ_STATUS status;
+//static LWQQ_STATUS status;
 
 //verify files
 static char vc_image[128];
@@ -50,7 +50,7 @@ static LwqqErrorCode cli_login()
 {
     LwqqErrorCode err;
 
-    lwqq_login(lc,status, &err);
+    lwqq_login(lc, &err);
     if (err == LWQQ_EC_LOGIN_NEED_VC) {
         snprintf(vc_image, sizeof(vc_image), "/tmp/lwqq_%s.jpeg", lc->username);
         snprintf(vc_file, sizeof(vc_file), "/tmp/lwqq_%s.txt", lc->username);
@@ -72,7 +72,7 @@ static LwqqErrorCode cli_login()
             goto failed;
         }
         lwqq_log(LOG_NOTICE, "Get verify code: %s\n", lc->vc->str);
-        lwqq_login(lc, status, &err);
+        lwqq_login(lc, &err);
     } else if (err != LWQQ_EC_OK) {
         goto failed;
     }
@@ -87,7 +87,7 @@ int main(int argc, char **argv)
 {
 	LwqqErrorCode err;
 	//1.Create lc with password and qq_num
-	lc = lwqq_client_new("acount", "password");
+	lc = lwqq_client_new("btbxbob@gmail.com", "irobot");
     if (!lc) {
         lwqq_log(LOG_NOTICE, "Create lwqq client failed\n");
         return -1;

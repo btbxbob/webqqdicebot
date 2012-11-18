@@ -41,7 +41,7 @@
 /* URL for get webqq version */
 #define LWQQ_URL_VERSION "http://ui.ptlogin2.qq.com/cgi-bin/ver"
 
-static void set_online_status(LwqqClient *lc,const char *status, LwqqErrorCode *err);
+static void set_online_status(LwqqClient *lc, char *status, LwqqErrorCode *err);
 
 /** 
  * Update the cookies needed by webqq
@@ -290,7 +290,7 @@ static void get_verify_image(LwqqClient *lc)
         image_length = atoi(content_length);
     }
     update_cookies(lc->cookies, req, "verifysession", 1);
-    snprintf(image_file, sizeof(image_file), "/tmp/%s.jpeg", lc->username);
+    snprintf(image_file, sizeof(image_file), "/tmp/lwqq_%s.jpeg", lc->username);
     /* Delete old file first */
     unlink(image_file);
     int fd = creat(image_file, S_IRUSR | S_IWUSR);
@@ -301,10 +301,6 @@ static void get_verify_image(LwqqClient *lc)
         }
         close(fd);
     }
-
-    lc->vc->data = req->response;
-    lc->vc->size = req->resp_len;
-    req->response = NULL;
  
 failed:
     lwqq_http_request_free(req);
@@ -414,21 +410,26 @@ static void do_login(LwqqClient *lc, const char *md5, LwqqErrorCode *err)
     char url[1024];
     LwqqHttpRequest *req;
     char *response = NULL;
+    char *cookies;
     int ret;
     
     snprintf(url, sizeof(url), "%s/login?u=%s&p=%s&verifycode=%s&"
-             "webqq_type=%d&remember_uin=1&aid=1003903&login2qq=1&"
+             "webqq_type=10&remember_uin=1&aid=1003903&login2qq=1&"
              "u1=http%%3A%%2F%%2Fweb.qq.com%%2Floginproxy.html"
              "%%3Flogin2qq%%3D1%%26webqq_type%%3D10&h=1&ptredirect=0&"
              "ptlang=2052&from_ui=1&pttype=1&dumy=&fp=loginerroralert&"
-             "action=2-11-7438&mibao_css=m_webqq&t=1&g=1", LWQQ_URL_LOGIN_HOST, lc->username, md5, lc->vc->str,lc->stat);
+             "action=2-11-7438&mibao_css=m_webqq&t=1&g=1", LWQQ_URL_LOGIN_HOST, lc->username, md5, lc->vc->str);
 
     req = lwqq_http_create_default_request(url, err);
     if (!req) {
         goto done;
     }
     /* Setup http header */
-    req->set_header(req, "Cookie", lwqq_get_cookies(lc));
+    cookies = lwqq_get_cookies(lc);
+    if (cookies) {
+        req->set_header(req, "Cookie", cookies);
+        s_free(cookies);
+    }
 
     /* Send request */
     ret = req->do_request(req, 0, NULL);
@@ -438,12 +439,6 @@ static void do_login(LwqqClient *lc, const char *md5, LwqqErrorCode *err)
     }
     if (req->http_code != 200) {
         *err = LWQQ_EC_HTTP_ERROR;
-        goto done;
-    }
-    if (strstr(req->response,"aq.qq.com")!=NULL){
-        *err = LWQQ_EC_LOGIN_ABNORMAL;
-        const char* beg = strstr(req->response,"http://aq.qq.com");
-        sscanf(beg,"%[^']",lc->error_description);
         goto done;
     }
 
@@ -467,60 +462,51 @@ static void do_login(LwqqClient *lc, const char *md5, LwqqErrorCode *err)
         
     case 1:
         lwqq_log(LOG_WARNING, "Server busy! Please try again\n");
-        lc->last_err = "Server busy! Please try again";
         *err = LWQQ_EC_ERROR;
         goto done;
 
     case 2:
         lwqq_log(LOG_ERROR, "Out of date QQ number\n");
-        lc->last_err = "Out of date QQ number";
         *err = LWQQ_EC_ERROR;
         goto done;
 
     case 3:
         lwqq_log(LOG_ERROR, "Wrong password\n");
         *err = LWQQ_EC_ERROR;
-        lc->last_err = "Wrong username or password";
         goto done;
 
     case 4:
         lwqq_log(LOG_ERROR, "Wrong verify code\n");
         *err = LWQQ_EC_ERROR;
-        lc->last_err = "Wrong verify code";
         goto done;
 
     case 5:
         lwqq_log(LOG_ERROR, "Verify failed\n");
-        lc->last_err = "Verify failed";
         *err = LWQQ_EC_ERROR;
         goto done;
 
     case 6:
         lwqq_log(LOG_WARNING, "You may need to try login again\n");
-        lc->last_err = "You may need to try login again";
         *err = LWQQ_EC_ERROR;
         goto done;
 
     case 7:
         lwqq_log(LOG_ERROR, "Wrong input\n");
-        lc->last_err = "Wrong input";
         *err = LWQQ_EC_ERROR;
         goto done;
 
     case 8:
         lwqq_log(LOG_ERROR, "Too many logins on this IP. Please try again\n");
-        lc->last_err = "Too many logins on this IP.Please try again";
         *err = LWQQ_EC_ERROR;
         goto done;
 
     default:
         *err = LWQQ_EC_ERROR;
-        lc->last_err = "Unknow error";
         lwqq_log(LOG_ERROR, "Unknow error");
         goto done;
     }
 
-    set_online_status(lc, lwqq_status_to_str(lc->stat), err);
+    set_online_status(lc, "online", err);
 done:
     lwqq_http_request_free(req);
 }
@@ -549,15 +535,11 @@ static void get_version(LwqqClient *lc, LwqqErrorCode *err)
     /* Send request */
     lwqq_log(LOG_DEBUG, "Get webqq version from %s\n", LWQQ_URL_VERSION);
     ret = req->do_request(req, 0, NULL);
-    if (ret || req->http_code!=200) {
+    if (ret) {
         *err = LWQQ_EC_NETWORK_ERROR;
         goto done;
     }
     response = req->response;
-    if(response == NULL){
-        *err = LWQQ_EC_NETWORK_ERROR;
-        goto done;
-    }
     if (strstr(response, "ptuiV")) {
         char *s, *t;
         char *v;
@@ -603,12 +585,13 @@ static char *generate_clientid()
  * @param err
  * @param lc 
  */
-static void set_online_status(LwqqClient *lc,const char *status, LwqqErrorCode *err)
+static void set_online_status(LwqqClient *lc, char *status, LwqqErrorCode *err)
 {
     char msg[1024] ={0};
     char *buf;
     LwqqHttpRequest *req = NULL;  
     char *response = NULL;
+    char *cookies;
     int ret;
     json_t *json = NULL;
     char *value;
@@ -645,7 +628,11 @@ static void set_online_status(LwqqClient *lc,const char *status, LwqqErrorCode *
     req->set_header(req, "Content-type", "application/x-www-form-urlencoded");
     
     /* Set http cookie */
-    req->set_header(req, "Cookie", lwqq_get_cookies(lc));
+    cookies = lwqq_get_cookies(lc);
+    if (cookies) {
+        req->set_header(req, "Cookie", cookies);
+        s_free(cookies);
+    }
     
     ret = req->do_request(req, 1, msg);
     if (ret) {
@@ -695,7 +682,8 @@ static void set_online_status(LwqqClient *lc,const char *status, LwqqErrorCode *
     }
 
     if ((value = json_parse_simple_value(json, "status"))) {
-        lc->status = lwqq_status_to_str(lc->stat);
+        /* This really need? */
+        lc->status = s_strdup(value);
     }
 
     if ((value = json_parse_simple_value(json, "vfwebqq"))) {
@@ -726,9 +714,9 @@ done:
  * @param client Lwqq Client 
  * @param err Error code
  */
-void lwqq_login(LwqqClient *client, LWQQ_STATUS status,LwqqErrorCode *err)
+void lwqq_login(LwqqClient *client, LwqqErrorCode *err)
 {
-    if (!client || !err|| !status) {
+    if (!client || !err) {
         lwqq_log(LOG_ERROR, "Invalid pointer\n");
         return ;
     }
@@ -775,7 +763,6 @@ void lwqq_login(LwqqClient *client, LWQQ_STATUS status,LwqqErrorCode *err)
     /* Third: calculate the md5 */
     char *md5 = lwqq_enc_pwd(client->password, client->vc->str, client->vc->uin);
 
-    client->stat = status;
     /* Last: do real login */
     do_login(client, md5, err);
     s_free(md5);
@@ -799,6 +786,7 @@ void lwqq_logout(LwqqClient *client, LwqqErrorCode *err)
     json_t *json = NULL;
     char *value;
     struct timeval tv;
+    char *cookies;
     long int re;
 
     if (!client) {
@@ -828,9 +816,12 @@ void lwqq_logout(LwqqClient *client, LwqqErrorCode *err)
     req->set_header(req, "Referer", "http://ptlogin2.qq.com/proxy.html?v=20101025002");
     
     /* Set http cookie */
-    req->set_header(req, "Cookie", lwqq_get_cookies(client));
+    cookies = lwqq_get_cookies(client);
+    if (cookies) {
+        req->set_header(req, "Cookie", cookies);
+        s_free(cookies);
+    }
     
-    lwqq_http_set_timeout(req,5);
     ret = req->do_request(req, 0, NULL);
     if (ret) {
         lwqq_log(LOG_ERROR, "Send logout request failed\n");
@@ -874,32 +865,3 @@ done:
         json_free_value(&json);
     lwqq_http_request_free(req);    
 }
-
-/*void lwqq_relogin(LwqqClient* lc)
-{
-    char url[128];
-    char post[1024];
-    int ret;
-    snprintf(url,sizeof(url),"%s/channel/login2","http://d.web2.qq.com");
-    LwqqHttpRequest* req = lwqq_http_create_default_request(url,NULL);
-    if(req==NULL){
-        goto done;
-    }
-    snprintf(post,sizeof(post),"r={"
-            "\"status\":\"online\","
-            "\"ptwebqq\":\"%s\","
-            "\"passwd_sig\":\"\","
-            "\"clientid\":\"%s\","
-            "\"psessionid\":\"%s\"}"
-            "&clientid=%s"
-            "&psessionid=%s",
-            lc->ptwebqq,lc->clientid,lc->psessionid,
-            lc->clientid,lc->psessionid);
-    req->set_header(req,"Origin","http://d.web2.qq.com");
-    req->set_header(req,"Referer","http://d.web2.qq.com/proxy.html?v=20110331002callback=0&id=2");
-    ret = req->do_request(req,1,post);
-    if(ret || req->http_code!=200){
-        goto done;
-    }
-
-}*/
