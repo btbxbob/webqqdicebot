@@ -24,7 +24,9 @@ long_line_column=72
 
 [files]
 current_page=0
-FILE_NAME_0=167;C;0;16;1;1;0;%2Fhome%2Fbx%2Fsrc%2Fwebqqdicebot%2Fsrc%2Fwebqqdicebot.c;0;4
+FILE_NAME_0=4148;C;0;16;1;1;0;%2Fhome%2Fbx%2Fsrc%2Fwebqqdicebot%2Fsrc%2Fwebqqdicebot.c;0;4
+FILE_NAME_1=182;C;0;16;1;1;0;%2Fhome%2Fbx%2Fsrc%2Flwqq%2Fsrc%2Fcli%2Fcli.c;0;4
+FILE_NAME_2=491;CMake;0;16;1;1;0;%2Fhome%2Fbx%2Fsrc%2Fwebqqdicebot%2Fsrc%2FCMakeLists.txt;0;4
 
 [VTE]
 last_dir=/home/bx

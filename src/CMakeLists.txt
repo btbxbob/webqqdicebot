@@ -1,6 +1,6 @@
-add_subdirectory(libghttp)
-include_directories (${LIBGHTTP_SOURCE_DIR}/libghttp)  
-link_directories (${LIBGHTTP_BINARY_DIR}/libghttp) 
+#add_subdirectory(libghttp)
+#include_directories (${LIBGHTTP_SOURCE_DIR}/libghttp)  
+#link_directories (${LIBGHTTP_BINARY_DIR}/libghttp) 
 
 set(LWQQ_LIST
   liblwqq/url.c
@@ -23,9 +23,10 @@ add_library(liblwqq
 
 include_directories(
 	liblwqq
-	libghttp
-	${GLIB_INCLUDE_DIRS}
+#	libghttp
+#	${GLIB_INCLUDE_DIRS}
 	${CURL_INCLUDE_DIRS}
+	${LUAJIT_INCLUDE_DIRS}
 	)
 
 add_executable (webqqdicebot webqqdicebot.c)
@@ -33,8 +34,9 @@ add_executable (webqqdicebot webqqdicebot.c)
 target_link_libraries(
 	webqqdicebot
 	liblwqq
-	libghttp
+#	libghttp
 	ev
 	${CURL_LIBRARIES}
-	${GLIB_LIBRARIES}
+#	${GLIB_LIBRARIES}
+	${LUAJIT_LIBRARIES}
 	)
