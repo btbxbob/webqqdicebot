@@ -1,0 +1,95 @@
+getpagesize.o: getpagesize.c ../config.h unistd.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/unistd.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/io.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/_mingw.h \
+ sys/types.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/sys/types.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/include/stddef.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/process.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/include/stdint.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/stdint.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/getopt.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/stdlib.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/windows.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/include/stdarg.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/windef.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/winnt.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/winerror.h \
+ string.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/string.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/basetsd.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/pshpack4.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/poppack.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/wincon.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/winbase.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/wingdi.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/winuser.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/winnls.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/winver.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/winnetwk.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/winreg.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/winsvc.h
+
+../config.h:
+
+unistd.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/unistd.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/io.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/_mingw.h:
+
+sys/types.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/sys/types.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/include/stddef.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/process.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/include/stdint.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/stdint.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/getopt.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/stdlib.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/windows.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/include/stdarg.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/windef.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/winnt.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/winerror.h:
+
+string.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/string.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/basetsd.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/pshpack4.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/poppack.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/wincon.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/winbase.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/wingdi.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/winuser.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/winnls.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/winver.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/winnetwk.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/winreg.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/winsvc.h:

@@ -1,6 +1,7 @@
 #add_subdirectory(libghttp)
 #include_directories (${LIBGHTTP_SOURCE_DIR}/libghttp)  
-#link_directories (${LIBGHTTP_BINARY_DIR}/libghttp) 
+#link_directories (${LIBGHTTP_BINARY_DIR}/libghttp)
+#include_directories (${GLLIB_SOURCE_DIR}/gllib)
 
 set(LWQQ_LIST
   liblwqq/url.c
@@ -16,27 +17,62 @@ set(LWQQ_LIST
   liblwqq/async.c
   #liblwqq/http.c
   liblwqq/http_curl.c
+  gllib/vasprintf.c
+  gllib/strndup.c
+  gllib/vasnprintf.c
+  gllib/printf-parse.c
+  gllib/printf-args.c
+  gllib/xsize.c
   )
-add_library(liblwqq
+add_library(lwqq
 	${LWQQ_LIST}
 	)
 
+if(WIN32)
+add_library(strtok_r
+	strtok_r.c
+	gllib/strnlen.c
+	)
+endif(WIN32)
+
 include_directories(
 	liblwqq
-#	libghttp
-#	${GLIB_INCLUDE_DIRS}
+	gllib
 	${CURL_INCLUDE_DIRS}
 	${LUAJIT_INCLUDE_DIRS}
 	)
 
+if(WIN32)
 add_executable (webqqdicebot webqqdicebot.c)
+#add_library (gnu gllib/vasprintf.c gllib/strndup.c)
+else(WIN32)
+add_executable (webqqdicebot webqqdicebot.c)
+endif(WIN32)
 
+if(WIN32)
 target_link_libraries(
 	webqqdicebot
-	liblwqq
+	${LUAJIT_LIBRARIES}
+#	gnu
+	lwqq
+	ev
+	strtok_r
+	pthread
+	curl.dll
+#	curl
+	z.dll
+	ws2_32.lib
+	)
+else(WIN32)
+target_link_libraries(
+	webqqdicebot
+	lwqq
 #	libghttp
 	ev
+	strtok_r
+	pthread
 	${CURL_LIBRARIES}
 #	${GLIB_LIBRARIES}
 	${LUAJIT_LIBRARIES}
 	)
+endif(WIN32)

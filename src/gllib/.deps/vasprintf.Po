@@ -1,0 +1,37 @@
+vasprintf.o: vasprintf.c ../config.h stdio.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/stdio.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/_mingw.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/include/stddef.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/include/stdarg.h sys/types.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/sys/types.h \
+ errno.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/errno.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/limits.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/stdlib.h \
+ vasnprintf.h
+
+../config.h:
+
+stdio.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/stdio.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/_mingw.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/include/stddef.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/include/stdarg.h:
+
+sys/types.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/sys/types.h:
+
+errno.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/errno.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/limits.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/stdlib.h:
+
+vasnprintf.h:

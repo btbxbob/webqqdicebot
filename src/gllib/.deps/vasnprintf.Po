@@ -1,0 +1,79 @@
+vasnprintf.o: vasnprintf.c ../config.h alloca.h vasnprintf.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/include/stdarg.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/include/stddef.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/locale.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/_mingw.h \
+ stdio.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/stdio.h \
+ sys/types.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/sys/types.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/stdlib.h \
+ string.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/string.h \
+ errno.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/errno.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/limits.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/include/float.h printf-parse.h \
+ printf-args.h wchar.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/time.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/wchar.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/wctype.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/include/stdint.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/stdint.h \
+ xsize.h verify.h
+
+../config.h:
+
+alloca.h:
+
+vasnprintf.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/include/stdarg.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/include/stddef.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/locale.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/_mingw.h:
+
+stdio.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/stdio.h:
+
+sys/types.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/sys/types.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/stdlib.h:
+
+string.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/string.h:
+
+errno.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/errno.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/limits.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/include/float.h:
+
+printf-parse.h:
+
+printf-args.h:
+
+wchar.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/time.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/wchar.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/wctype.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/include/stdint.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/stdint.h:
+
+xsize.h:
+
+verify.h:

@@ -1,0 +1,11 @@
+asnprintf.o: asnprintf.c ../config.h vasnprintf.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/include/stdarg.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/include/stddef.h
+
+../config.h:
+
+vasnprintf.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/include/stdarg.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/include/stddef.h:

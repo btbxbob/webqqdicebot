@@ -14,7 +14,11 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <ctype.h>
+
+#ifndef _WIN32
 #include <alloca.h>
+#endif
+
 #include <time.h>
 #include <sys/time.h>
 #include <sys/types.h>

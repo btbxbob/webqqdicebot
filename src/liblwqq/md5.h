@@ -48,6 +48,10 @@
 #ifndef MD5_H
 #define MD5_H
 
+#ifndef u_int32_t
+#define u_int32_t unsigned int
+#endif
+
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif

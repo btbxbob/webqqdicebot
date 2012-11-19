@@ -1,0 +1,17 @@
+strndup.o: strndup.c ../config.h string.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/string.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/_mingw.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/include/stddef.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/stdlib.h
+
+../config.h:
+
+string.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/string.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/_mingw.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/include/stddef.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/stdlib.h:

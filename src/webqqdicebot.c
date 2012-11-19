@@ -16,7 +16,14 @@
 #include <smemory.h>
 
 //luajit
-#include <luajit.h>
+#include <luajit-2.0\luajit.h>
+
+//for windows
+#if defined(_WIN32) || defined(_WIN64)
+#include "strtok_r.h"
+#include <windows.h>
+#define sleep(n) Sleep(1000 * n)
+#endif
 
 //i hate unistd.h
 #define F_OK 0 

@@ -1,0 +1,20 @@
+xsize.o: xsize.c ../config.h xsize.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/include/stddef.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/limits.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/_mingw.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/include/stdint.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/stdint.h
+
+../config.h:
+
+xsize.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/include/stddef.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/limits.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/_mingw.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/include/stdint.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/stdint.h:

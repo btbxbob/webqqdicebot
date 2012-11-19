@@ -9,10 +9,10 @@
  */
 
 #define _GNU_SOURCE
-#include <stdio.h>
+#include "stdio.h"
 #include <stdlib.h>
 #include <stdarg.h>
-#include <string.h>
+#include "string.h"
 
 void *s_malloc(size_t size)
 {

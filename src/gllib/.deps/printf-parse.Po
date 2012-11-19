@@ -1,0 +1,64 @@
+printf-parse.o: printf-parse.c ../config.h printf-parse.h printf-args.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/include/stddef.h wchar.h stdio.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/stdio.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/_mingw.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/include/stdarg.h sys/types.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/sys/types.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/time.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/wchar.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/wctype.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/include/stdint.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/stdint.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/stdlib.h \
+ string.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/string.h \
+ errno.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/errno.h \
+ xsize.h \
+ d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/limits.h
+
+../config.h:
+
+printf-parse.h:
+
+printf-args.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/include/stddef.h:
+
+wchar.h:
+
+stdio.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/stdio.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/_mingw.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/include/stdarg.h:
+
+sys/types.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/sys/types.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/time.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/wchar.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/wctype.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/include/stdint.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/stdint.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/stdlib.h:
+
+string.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/string.h:
+
+errno.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/errno.h:
+
+xsize.h:
+
+d:\mingw\bin\../lib/gcc/mingw32/4.7.2/../../../../include/limits.h:
