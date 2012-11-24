@@ -1,6 +1,6 @@
-#include <stdio.h>
+#include "gllib/stdio.h"
 #include <stdlib.h>
-#include <string.h>
+#include "gllib/string.h"
 #include <pthread.h>
 #include <malloc.h>
 #include <unistd.h>
@@ -16,9 +16,15 @@
 #include <smemory.h>
 
 //luajit
-#include <luajit-2.0\luajit.h>
-#include <luajit-2.0\lualib.h>
-#include <luajit-2.0\lauxlib.h>
+#if (_WIN32)
+	#include <luajit-2.0\luajit.h>
+	#include <luajit-2.0\lualib.h>
+	#include <luajit-2.0\lauxlib.h>
+#else
+	#include <luajit.h>
+	#include <lualib.h>
+	#include <lauxlib.h>
+#endif
 //the luajit state
 lua_State *L;
 

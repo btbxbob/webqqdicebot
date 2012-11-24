@@ -88,7 +88,7 @@
 
 /* Define to 1 if you have the declaration of `_snprintf', and to 0 if you
    don't. */
-#define HAVE_DECL__SNPRINTF 1
+#define HAVE_DECL__SNPRINTF 0
 
 /* Define to 1 if you have the <features.h> header file. */
 /* #undef HAVE_FEATURES_H */
