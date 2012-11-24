@@ -33,6 +33,9 @@ add_library(strtok_r
 	strtok_r.c
 	gllib/strnlen.c
 	)
+add_library(utf82gbk
+	utf82gbk.c
+	)
 endif(WIN32)
 
 include_directories(
@@ -57,6 +60,8 @@ target_link_libraries(
 	lwqq
 	ev
 	strtok_r
+	utf82gbk
+	iconv
 	pthread
 	curl.dll
 #	curl
@@ -69,7 +74,6 @@ target_link_libraries(
 	lwqq
 #	libghttp
 	ev
-	strtok_r
 	pthread
 	${CURL_LIBRARIES}
 #	${GLIB_LIBRARIES}

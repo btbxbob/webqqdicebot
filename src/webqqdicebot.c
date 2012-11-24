@@ -17,12 +17,21 @@
 
 //luajit
 #include <luajit-2.0\luajit.h>
+#include <luajit-2.0\lualib.h>
+#include <luajit-2.0\lauxlib.h>
+//the luajit state
+lua_State *L;
 
 //for windows
 #if defined(_WIN32) || defined(_WIN64)
-#include "strtok_r.h"
-#include <windows.h>
-#define sleep(n) Sleep(1000 * n)
+    #include "strtok_r.h"
+    #include <windows.h>
+    #include <iconv.h>
+    #include "utf82gbk.h"
+    #define sleep(n) Sleep(1000 * n)
+    #define _TEXT utf82gbk
+#else
+    #define _TEXT
 #endif
 
 //i hate unistd.h
@@ -181,9 +190,7 @@ static int send_f(int argc, char **argv)
     if (argc != 3) {
         return 0;
     }
-    
     lwqq_msg_send2(lc, argv[1], argv[2]);
-    
     return 0;
 }
 //-----------------------
@@ -218,7 +225,8 @@ static LwqqErrorCode cli_login()
     LwqqErrorCode err;
 
     lwqq_login(lc, &err);
-    if (err == LWQQ_EC_LOGIN_NEED_VC) {
+    if (err == LWQQ_EC_LOGIN_NEED_VC) 
+    {
         snprintf(vc_image, sizeof(vc_image), "/tmp/lwqq_%s.jpeg", lc->username);
         snprintf(vc_file, sizeof(vc_file), "/tmp/lwqq_%s.txt", lc->username);
         /* Delete old verify image */
@@ -236,18 +244,15 @@ static LwqqErrorCode cli_login()
         }
         lc->vc->str = get_vc();
         if (!lc->vc->str) {
-            goto failed;
+            return LWQQ_EC_ERROR;
         }
         lwqq_log(LOG_NOTICE, "Get verify code: %s\n", lc->vc->str);
         lwqq_login(lc, &err);
     } else if (err != LWQQ_EC_OK) {
-        goto failed;
+        return LWQQ_EC_ERROR;
     }
 
     return err;
-
-failed:
-    return LWQQ_EC_ERROR;
 }
 
 static void cli_logout(LwqqClient *lc)
@@ -267,6 +272,7 @@ static void handle_new_msg(LwqqRecvMsg *recvmsg)
     LwqqMsg *msg = recvmsg->msg;
 
     printf("Receive message type: %d\n", msg->type);
+    //buddy msg
     if (msg->type == LWQQ_MT_BUDDY_MSG) {
         char buf[1024] = {0};
         LwqqMsgContent *c;
@@ -278,19 +284,22 @@ static void handle_new_msg(LwqqRecvMsg *recvmsg)
                 printf ("Receive face msg: %d\n", c->data.face);
             }
         }
-        printf("Receive message: %s\n", buf);
+        printf("BUDDY[%s]:%s\n", _TEXT(mmsg->from), _TEXT(buf));
     } else if (msg->type == LWQQ_MT_GROUP_MSG) {
         LwqqMsgMessage *mmsg = msg->opaque;
         char buf[1024] = {0};
         LwqqMsgContent *c;
-        TAILQ_FOREACH(c, &mmsg->content, entries) {
+        char sender[128];
+        //sender=mmsg->from;
+        TAILQ_FOREACH(c, &mmsg->content, entries) 
+        {
             if (c->type == LWQQ_CONTENT_STRING) {
                 strcat(buf, c->data.str);
             } else {
                 printf ("Receive face msg: %d\n", c->data.face);
             }
         }
-        printf("Receive message: %s\n", buf);
+        printf("GROUP[%s]:%s\n", _TEXT(mmsg->from), _TEXT(buf));
     } else if (msg->type == LWQQ_MT_STATUS_CHANGE) {
         LwqqMsgStatusChange *status = msg->opaque;
         printf("Receive status change: %s - > %s\n", 
@@ -372,21 +381,45 @@ static void *info_thread(void *lc)
 {
     LwqqErrorCode err;
     lwqq_info_get_friends_info(lc, &err);
-//    lwqq_info_get_all_friend_qqnumbers(lc, &err);
-
+    //lwqq_info_get_all_friend_qqnumbers(lc, &err);
     pthread_exit(NULL);
+}
+
+//maybe just for windows
+static int lua_to_gb(lua_State *L)
+{
+    const char *input=luaL_checkstring(L,1);
+    printf("%s\n",_TEXT((char *)input));
+    return 0;
 }
 
 int main(int argc, char **argv)
 {
+
 	//0. i think i should init luajit here
 	//TODO: luajit init
-	
+    L=luaL_newstate();
+    luaL_openlibs(L);
+    //HACK:
+    //if is windows, over write lua's print
+    #if(_WIN32)
+        lua_pushcfunction(L, lua_to_gb);
+        lua_setglobal(L, "print");
+    #endif
+    //load bot's pass via lua
+    char uid[128];
+    char password[32];
+    luaL_dofile(L,"settings.lua");
+    lua_getglobal(L,"uid");
+    strcpy(uid,lua_tostring(L,-1));
+    lua_getglobal(L,"password");
+    strcpy(password,lua_tostring(L,-1));
+
 	LwqqErrorCode err;
 	pthread_t tid[2];
     pthread_attr_t attr[2];
 	//1.Create lc with password and qq_num
-	lc = lwqq_client_new("btbxbob@gmail.com", "irobot");
+	lc = lwqq_client_new(uid, password);
     if (!lc) {
         lwqq_log(LOG_NOTICE, "Create lwqq client failed\n");
         return -1;
@@ -422,6 +455,7 @@ int main(int argc, char **argv)
     /* Logout */
     cli_logout(lc);
     lwqq_client_free(lc);
+    lua_close(L);
 
 	return 0;
 }
