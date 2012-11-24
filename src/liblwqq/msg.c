@@ -660,3 +660,30 @@ int lwqq_msg_send2(void *client, const char *to, const char *content)
     lwqq_msg_free(msg);
     return ret;
 }
+
+int lwqq_msg_send_simple(LwqqClient* lc,int type,const char* to,const char* message)
+{
+    if(!lc||!to||!message)
+        return 0;
+    int ret = 0;
+    LwqqMsg *msg = lwqq_msg_new(type);
+    LwqqMsgMessage *mmsg = msg->opaque;
+    mmsg->to = s_strdup(to);
+    mmsg->f_name = "宋体";
+    mmsg->f_size = 13;
+    //mmsg->f_style.b = 0,mmsg->f_style.i = 0,mmsg->f_style.u = 0;
+    mmsg->f_color = "000000";
+    LwqqMsgContent * c = s_malloc(sizeof(*c));
+    c->type = LWQQ_CONTENT_STRING;
+    c->data.str = s_strdup(message);
+    TAILQ_INSERT_TAIL(&mmsg->content,c,entries);
+
+    lwqq_msg_send(lc,msg);
+
+    mmsg->f_name = NULL;
+    mmsg->f_color = NULL;
+
+    lwqq_msg_free(msg);
+
+    return ret;
+}
