@@ -617,10 +617,62 @@ static void parse_groups_ginfo_child(LwqqClient *lc, LwqqGroup *group,  json_t *
     SET_GINFO(option, "option");
     
 #undef SET_GINFO
-    
-}
 
-/** 
+}
+static char* ibmpc_ascii_character_convert(char *str)
+{
+    static char buf[256];
+    char *ptr = str;
+    char *write = buf;
+    const char* spec;
+    while(*ptr!='\0'){
+        switch(*ptr){
+            case 0x01:spec="☺";break;
+            case 0x02:spec="☻";break;
+            case 0x03:spec="♥";break;
+            case 0x04:spec="◆";break;
+            case 0x05:spec="♣";break;
+            case 0x06:spec="♠";break;
+            case 0x07:spec="⚫";break;
+            case 0x08:spec="⚫";break;
+            case 0x09:spec="⚪";break;
+            case 0x0A:spec="⚪";break;
+            case 0x0B:spec="♂";break;
+            case 0x0C:spec="♁";break;
+            case 0x0D:spec="♪";break;
+            case 0x0E:spec="♬";break;
+            case 0x0F:spec="☼";break;
+            case 0x10:spec="▶";break;
+            case 0x11:spec="◀";break; 
+            case 0x12:spec="↕";break;
+            case 0x13:spec="‼";break;
+            case 0x14:spec="¶";break;
+            case 0x15:spec="§";break;
+            case 0x16:spec="▁";break;
+            case 0x17:spec="↨";break;
+            case 0x18:spec="↑";break;
+            case 0x19:spec="↓";break;
+            case 0x1A:spec="→";break;
+            case 0x1B:spec="←";break;
+            case 0x1C:spec="∟";break;
+            case 0x1D:spec="↔";break;
+            case 0x1E:spec="▲";break;
+            case 0x1F:spec="▼";break;
+            default:
+                *write++ = *ptr;
+                ptr++;
+                continue;
+                break;
+        }
+        strcpy(write,spec);
+        write+=strlen(write);
+        ptr++;
+    }
+    *write = '\0';
+    s_free(str);
+    return s_strdup(buf);
+}
+/**
  * Parse group members info
  * we only get the "nick" and the "uin", and get the members' qq number.
  *
@@ -628,13 +680,13 @@ static void parse_groups_ginfo_child(LwqqClient *lc, LwqqGroup *group,  json_t *
  *   {"nick":"evildoer","province":"......","gender":"male","uin":56360327,"country":"......","city":"......"},
  *   {"nick":"evil...doer","province":"......","gender":"male","uin":909998471,"country":"......","city":"......"}],
  *
- * @param lc 
+ * @param lc
  * @param group
  * @param json Point to the first child of "result"'s value
  */
 static void parse_groups_minfo_child(LwqqClient *lc, LwqqGroup *group,  json_t *json)
 {
-    LwqqBuddy *member;
+    LwqqSimpleBuddy *member;
     json_t *cur;
     char *uin;
     char *nick;
@@ -657,22 +709,83 @@ static void parse_groups_minfo_child(LwqqClient *lc, LwqqGroup *group,  json_t *
 
         if (!uin || !nick)
             continue;
-        member = lwqq_buddy_new();
+        //may solve group member duplicated problem
+        if(lwqq_group_find_group_member_by_uin(group,uin)==NULL){
+            member = lwqq_simple_buddy_new();
 
-        member->uin = s_strdup(uin);
-        member->nick = s_strdup(nick);
+            member->uin = s_strdup(uin);
+            member->nick = ibmpc_ascii_character_convert(json_unescape(nick));
 
         /* FIX ME: should we get group members qqnumber here ? */
         /* we can get the members' qq number by uin */
-        member->qqnumber = get_friend_qqnumber(lc, member->uin);
+        member->qq = get_friend_qqnumber(lc, member->uin);
 
         /* Add to members list */
         LIST_INSERT_HEAD(&group->members, member, entries);
+        }
+    }
+}
+static void parse_groups_ginfo_members_child(LwqqClient *lc, LwqqGroup *group,  json_t *json)
+{
+    while (json) {
+        if (json->text && !strcmp(json->text, "ginfo")) {
+            break;
+        }
+        json = json->next;
+    }
+    if (!json) {
+        return ;
+    }
+    json_t* members = json_find_first_label_all(json,"members");
+    members = members->child->child;
+    const char* uin;
+    int mflag;
+    LwqqSimpleBuddy* sb;
+    while(members){
+        uin = json_parse_simple_value(members,"muin");
+        mflag = s_atoi(json_parse_simple_value(members,"mflag"));
+        sb = lwqq_group_find_group_member_by_uin(group,uin);
+        if(sb) sb->mflag = mflag;
+
+        members = members->next;
+    }
+
+}
+static void parse_groups_cards_child(LwqqClient *lc, LwqqGroup *group,  json_t *json)
+{
+    LwqqSimpleBuddy *member;
+    json_t *cur;
+    char *uin;
+    char *card;
+
+    /* Make json point "minfo" reference */
+    while (json) {
+        if (json->text && !strcmp(json->text, "cards")) {
+            break;
+        }
+        json = json->next;
+    }
+    if (!json) {
+        return ;
+    }
+
+    json = json->child;    //point to the array.[]
+    for (cur = json->child; cur != NULL; cur = cur->next) {
+        uin = json_parse_simple_value(cur, "muin");
+        card = json_parse_simple_value(cur, "card");
+
+        if (!uin || !card)
+            continue;
+
+        member = lwqq_group_find_group_member_by_uin(group,uin);
+        if(member != NULL){
+            member->card = ibmpc_ascii_character_convert(json_unescape(card));
+        }
     }
 }
 
-/** 
- * mark qq group's online members 
+/**
+ * mark qq group's online members
  *
  * "stats":[{"client_type":1,"uin":56360327,"stat":10},{"client_type":41,"uin":909998471,"stat":10}],
  *
@@ -682,7 +795,7 @@ static void parse_groups_minfo_child(LwqqClient *lc, LwqqGroup *group,  json_t *
  */
 static void parse_groups_stats_child(LwqqClient *lc, LwqqGroup *group,  json_t *json)
 {
-    LwqqBuddy *member;
+    LwqqSimpleBuddy *member;
     json_t *cur;
     char *uin;
     
@@ -706,8 +819,8 @@ static void parse_groups_stats_child(LwqqClient *lc, LwqqGroup *group,  json_t *
         member = lwqq_group_find_group_member_by_uin(group, uin);
         if (!member)
             continue;
-        member->client_type = s_strdup(json_parse_simple_value(cur, "client_type"));
-        member->stat = s_strdup(json_parse_simple_value(cur, "stat"));
+        member->client_type = s_atoi(json_parse_simple_value(cur, "client_type"));
+        member->stat = s_atoi(json_parse_simple_value(cur, "stat"));
 
     }
 }
@@ -731,20 +844,20 @@ void lwqq_info_get_group_detail_info(LwqqClient *lc, LwqqGroup *group,
     char *cookies;
 
     if (!lc || ! group) {
-        return ;
+        return;
     }
 
     /* Make sure we know code. */
     if (!group->code) {
         if (err)
             *err = LWQQ_EC_NULL_POINTER;
-        return ;
+        return;
     }
-    
+
     /* Create a GET request */
     snprintf(url, sizeof(url),
-             "%s/api/get_group_info_ext2?gcode=%s&vfwebqq=%s",
-             "http://s.web2.qq.com", group->code, lc->vfwebqq);
+             "%s/api/get_group_info_ext2?gcode=%s&vfwebqq=%s&t=%ld",
+             "http://s.web2.qq.com", group->code, lc->vfwebqq,time(NULL));
     req = lwqq_http_create_default_request(url, err);
     if (!req) {
         goto done;
@@ -807,6 +920,8 @@ void lwqq_info_get_group_detail_info(LwqqClient *lc, LwqqGroup *group,
         parse_groups_ginfo_child(lc, group, json_tmp);
         /* second , get group members */
         parse_groups_minfo_child(lc, group, json_tmp);
+        parse_groups_ginfo_members_child(lc,group,json_tmp);
+        parse_groups_cards_child(lc, group, json_tmp);
         /* third , mark group's online members */
         parse_groups_stats_child(lc, group, json_tmp);
                
@@ -1011,7 +1126,11 @@ void lwqq_info_get_friend_detail_info(LwqqClient *lc, LwqqBuddy *buddy,
         SET_BUDDY_INFO(constel, "constel");
         SET_BUDDY_INFO(blood, "blood");
         SET_BUDDY_INFO(homepage, "homepage");
-        SET_BUDDY_INFO(stat, "stat");
+        //SET_BUDDY_INFO(stat, "stat");
+        buddy->stat = s_atoi(json_parse_simple_value(json,"stat"));
+        /*if(buddy->status) s_free(buddy->status);
+        buddy->status = NULL;
+        buddy->status = s_strdup(lwqq_status_to_str(s_atoi(buddy->stat)));*/
         SET_BUDDY_INFO(vip_info, "vip_info");
         SET_BUDDY_INFO(country, "country");
         SET_BUDDY_INFO(city, "city");
@@ -1019,7 +1138,8 @@ void lwqq_info_get_friend_detail_info(LwqqClient *lc, LwqqBuddy *buddy,
         SET_BUDDY_INFO(nick, "nick");
         SET_BUDDY_INFO(shengxiao, "shengxiao");
         SET_BUDDY_INFO(email, "email");
-        SET_BUDDY_INFO(client_type, "client_type");
+        //SET_BUDDY_INFO(client_type, "client_type");
+        buddy->client_type = s_atoi(json_parse_simple_value(json,"client_type"));
         SET_BUDDY_INFO(province, "province");
         SET_BUDDY_INFO(gender, "gender");
         SET_BUDDY_INFO(mobile, "mobile");
@@ -1061,11 +1181,10 @@ static void update_online_buddies(LwqqClient *lc, json_t *json)
         client_type = json_parse_simple_value(cur, "client_type");
         b = lwqq_buddy_find_buddy_by_uin(lc, uin);
         if (b) {
-            s_free(b->status);
-            b->status = s_strdup(status);
+			//TODO
+            //b->stat = lwqq_status_from_str(status);
             if (client_type) {
-                s_free(b->client_type);
-                b->client_type = s_strdup(client_type);
+                b->client_type = s_atoi(client_type);
             }
         }
     }
@@ -1089,7 +1208,7 @@ void lwqq_info_get_online_buddies(LwqqClient *lc, LwqqErrorCode *err)
     char *cookies;
 
     if (!lc) {
-        return ;
+        return NULL;
     }
 
     /* Create a GET request */

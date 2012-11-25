@@ -6,7 +6,7 @@
 #include <unistd.h>
 
 //liblwqq
-#include <type.h>
+#include "type.h"
 #include <async.h>
 #include <msg.h>
 #include <info.h>
@@ -165,6 +165,11 @@ static int list_f(int argc, char **argv)
                 strcat(buf, buddy->nick);
                 strcat(buf, ", ");
             }
+            if (buddy->qqnumber){
+				strcat(buf, "qq:");
+				strcat(buf, buddy->qqnumber);
+				strcat(buf, ", ");
+			}
             printf("Buddy info: %s\n", buf);
         }
     } else {
@@ -305,7 +310,25 @@ static void handle_new_msg(LwqqRecvMsg *recvmsg)
                 printf ("Receive face msg: %d\n", c->data.face);
             }
         }
-        printf("GROUP[%s]:%s\n", _TEXT(mmsg->from), _TEXT(buf));
+        //char qun_name[128];
+        //char sender_name[128];
+        printf("group_code:%s\n",mmsg->group_code);
+        printf("from:%s\n",mmsg->from);
+        printf("send:%s\n",mmsg->send);
+        LwqqGroup *senderGroup=lwqq_group_find_group_by_gid(lc, mmsg->group_code);
+        LwqqBuddy *senderBuddy=lwqq_buddy_find_buddy_by_uin(lc, mmsg->send);
+        
+        if (!senderGroup)
+			printf("senderGroup is null\n");
+		else
+			printf("%s\n", senderGroup->name);
+		if (!senderBuddy)
+			printf("senderBuddy is null\n");
+		else
+			printf("%s\n", senderBuddy->nick);
+        //strcpy(qun_name,msgGroup->name);
+        //strcpy(sender_name,lwqq_group_find_group_member_by_uin(msgGroup, mmsg->send)->nick);
+        printf("%s[%s]:%s\n", _TEXT(""), _TEXT(""), _TEXT(buf));
     } else if (msg->type == LWQQ_MT_STATUS_CHANGE) {
         LwqqMsgStatusChange *status = msg->opaque;
         printf("Receive status change: %s - > %s\n", 

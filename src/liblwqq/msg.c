@@ -351,6 +351,20 @@ static int parse_new_msg(json_t *json, void *opaque)
     if (parse_content(json, opaque)) {
         return -1;
     }
+    
+    /*from pidgin-lwqq by bx */
+    msg->msg_id = s_strdup(json_parse_simple_value(json,"msg_id"));
+    msg->msg_id2 = atoi(json_parse_simple_value(json, "msg_id2"));
+
+    char* value;
+    //if it failed means it is not group message.
+    //so it equ NULL.
+    value = s_strdup(json_parse_simple_value(json, "send_uin"));
+    if(value!=NULL) msg->send = value;
+    value = s_strdup(json_parse_simple_value(json,"group_code"));
+    if(value!=NULL) msg->group_code = value;
+    value = s_strdup(json_parse_simple_value(json,"id"));
+    if(value!=NULL) msg->id = value;
 
     return 0;
 }
@@ -660,7 +674,7 @@ int lwqq_msg_send2(void *client, const char *to, const char *content)
     lwqq_msg_free(msg);
     return ret;
 }
-
+    
 int lwqq_msg_send_simple(LwqqClient* lc,int type,const char* to,const char* message)
 {
     if(!lc||!to||!message)
@@ -686,4 +700,14 @@ int lwqq_msg_send_simple(LwqqClient* lc,int type,const char* to,const char* mess
     lwqq_msg_free(msg);
 
     return ret;
+}
+
+int lwqq_msg_send_buddy(LwqqClient * lc, const char *to, const char * msg)
+{
+	return lwqq_msg_send_simple(lc, LWQQ_MT_BUDDY_MSG, to, msg);
+}
+
+int lwqq_msg_send_group(LwqqClient * lc, const char *to, const char * msg)
+{
+	return lwqq_msg_send_simple(lc, LWQQ_MT_GROUP_MSG, to, msg);
 }

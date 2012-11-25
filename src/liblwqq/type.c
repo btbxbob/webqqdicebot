@@ -230,6 +230,27 @@ void lwqq_buddy_free(LwqqBuddy *buddy)
     s_free(buddy);
 }
 
+//added by bx from pidgin-lwqq
+LwqqSimpleBuddy* lwqq_simple_buddy_new()
+{
+    LwqqSimpleBuddy*ret = ((LwqqSimpleBuddy*)s_malloc0(sizeof(LwqqSimpleBuddy)));
+    ret->stat = LWQQ_STATUS_OFFLINE;
+    return ret;
+}
+void lwqq_simple_buddy_free(LwqqSimpleBuddy* buddy)
+{
+    if(!buddy) return;
+
+    s_free(buddy->uin);
+    s_free(buddy->qq);
+    s_free(buddy->cate_index);
+    s_free(buddy->nick);
+    s_free(buddy->card);
+    //s_free(buddy->stat);
+    s_free(buddy->group_sig);
+    s_free(buddy);
+}
+
 /** 
  * Find buddy object by buddy's uin member
  * 
@@ -247,6 +268,21 @@ LwqqBuddy *lwqq_buddy_find_buddy_by_uin(LwqqClient *lc, const char *uin)
 
     LIST_FOREACH(buddy, &lc->friends, entries) {
         if (buddy->uin && (strcmp(buddy->uin, uin) == 0))
+            return buddy;
+    }
+
+    return NULL;
+}
+
+LwqqBuddy *lwqq_buddy_find_buddy_by_qqnumber(LwqqClient *lc, const char *qqnumber)
+{
+    LwqqBuddy *buddy;
+    
+    if (!lc || !qqnumber)
+        return NULL;
+
+    LIST_FOREACH(buddy, &lc->friends, entries) {
+        if (buddy->qqnumber && (strcmp(buddy->qqnumber, qqnumber) == 0))
             return buddy;
     }
 
@@ -325,6 +361,20 @@ LwqqGroup *lwqq_group_find_group_by_gid(LwqqClient *lc, const char *gid)
 
     return NULL;
 }
+LwqqGroup *lwqq_group_find_group_by_groupnumber(LwqqClient *lc, const char *groupnumber)
+{
+	    LwqqGroup *group;
+    
+    if (!lc || !groupnumber)
+        return NULL;
+
+    LIST_FOREACH(group, &lc->groups, entries) {
+        if (group->account && (strcmp(group->account, groupnumber) == 0))
+            return group;
+    }
+
+    return NULL;
+}
 
 /** 
  * Find group member object by member's uin
@@ -347,4 +397,29 @@ LwqqBuddy *lwqq_group_find_group_member_by_uin(LwqqGroup *group, const char *uin
     }
 
     return NULL;
+}
+
+const char* lwqq_status_to_str(LWQQ_STATUS status)
+{
+    switch(status){
+        case LWQQ_STATUS_ONLINE: return "online";break;
+        case LWQQ_STATUS_OFFLINE: return "offline";break;
+        case LWQQ_STATUS_AWAY: return "away";break;
+        case LWQQ_STATUS_HIDDEN: return "hidden";break;
+        case LWQQ_STATUS_BUSY: return "busy";break;
+        case LWQQ_STATUS_CALLME: return "callme";break;
+        case LWQQ_STATUS_SLIENT: return "slient";break;
+        default: return "unknow";break;
+    }
+}
+LWQQ_STATUS lwqq_status_from_str(const char* str)
+{
+    if(strcmp(str,"online")==0) return LWQQ_STATUS_ONLINE;
+    else if(strcmp(str,"offline")==0) return LWQQ_STATUS_OFFLINE;
+    else if(strcmp(str,"away")==0) return LWQQ_STATUS_AWAY;
+    else if(strcmp(str,"hidden")==0) return LWQQ_STATUS_HIDDEN;
+    else if(strcmp(str,"busy")==0) return LWQQ_STATUS_BUSY;
+    else if(strcmp(str,"callme")==0) return LWQQ_STATUS_CALLME;
+    else if(strcmp(str,"slient")==0) return LWQQ_STATUS_SLIENT;
+    else return LWQQ_STATUS_UNKNOW;
 }

@@ -11,8 +11,9 @@
 #ifndef LWQQ_TYPE_H
 #define LWQQ_TYPE_H
 
+#include <pthread.h>
 #include "queue.h"
-#include "msg.h"
+//#include "msg.h"
 
 #define LWQQ_MAGIC 0x4153
 
@@ -30,6 +31,23 @@ typedef struct LwqqFriendCategory {
     int count;
     LIST_ENTRY(LwqqFriendCategory) entries;
 } LwqqFriendCategory;
+
+//added by bx from pidgin-lwqq
+typedef enum LWQQ_STATUS{
+    LWQQ_STATUS_UNKNOW = 0,
+    LWQQ_STATUS_ONLINE = 10,
+    LWQQ_STATUS_OFFLINE = 20,
+    LWQQ_STATUS_AWAY = 30,
+    LWQQ_STATUS_HIDDEN = 40,
+    LWQQ_STATUS_BUSY = 50,
+    LWQQ_STATUS_CALLME = 60,
+    LWQQ_STATUS_SLIENT = 70
+}LWQQ_STATUS;
+typedef enum LWQQ_CTYPE{
+    LWQQ_CLIENT_DESKTOP=1,
+    LWQQ_CLIENT_MOBILE=21,
+    LWQQ_CLIENT_WEBQQ=41,
+}LWQQ_CTYPE;
 
 /* QQ buddy */
 typedef struct LwqqBuddy {
@@ -73,6 +91,25 @@ typedef struct LwqqBuddy {
     pthread_mutex_t mutex;
     LIST_ENTRY(LwqqBuddy) entries; /* FIXME: Do we really need this? */
 } LwqqBuddy;
+
+//added by bx from pidgin-lwqq
+enum LWQQ_FLAG_ENUM{
+    LWQQ_MEMBER_IS_ADMIN = 0x1,
+};
+typedef int LWQQ_FLAG;
+typedef struct LwqqSimpleBuddy{
+    char* uin;
+    char* qq;
+    char* nick;
+    char* card;                 /* 群名片 */
+    LWQQ_CTYPE client_type;
+    //char* stat;
+    LWQQ_STATUS stat;
+    LWQQ_FLAG mflag;
+    char* cate_index;
+    char* group_sig;            /* only use at sess message */
+    LIST_ENTRY(LwqqSimpleBuddy) entries;
+}LwqqSimpleBuddy;
 
 /* QQ group */
 typedef struct LwqqGroup {
@@ -137,7 +174,7 @@ typedef struct LwqqClient {
     LIST_HEAD(, LwqqBuddy) friends; /**< QQ friends */
     LIST_HEAD(, LwqqFriendCategory) categories; /**< QQ friends categories */
     LIST_HEAD(, LwqqGroup) groups; /**< QQ groups */
-    LwqqRecvMsgList *msg_list;
+    struct LwqqRecvMsgList *msg_list;
     long msg_id;            /**< Used to send message */
     int magic;          /**< 0x4153 **/
 } LwqqClient;
@@ -205,6 +242,7 @@ void lwqq_client_free(LwqqClient *client);
  * @return A LwqqBuddy instance
  */
 LwqqBuddy *lwqq_buddy_new();
+LwqqSimpleBuddy* lwqq_simple_buddy_new();
 
 /** 
  * Free a LwqqBuddy instance
@@ -212,6 +250,7 @@ LwqqBuddy *lwqq_buddy_new();
  * @param buddy 
  */
 void lwqq_buddy_free(LwqqBuddy *buddy);
+void lwqq_simple_buddy_free(LwqqSimpleBuddy* buddy);
 
 /** 
  * Find buddy object by buddy's uin member
@@ -222,6 +261,7 @@ void lwqq_buddy_free(LwqqBuddy *buddy);
  * @return 
  */
 LwqqBuddy *lwqq_buddy_find_buddy_by_uin(LwqqClient *lc, const char *uin);
+LwqqBuddy *lwqq_buddy_find_buddy_by_qqnumber(LwqqClient *lc, const char *qqnumber);
 
 /* LwqqBuddy API END*/
 
@@ -250,6 +290,7 @@ LwqqGroup *lwqq_group_new();
  * @return A LwqqGroup instance
  */
 LwqqGroup *lwqq_group_find_group_by_gid(LwqqClient *lc, const char *gid);
+LwqqGroup *lwqq_group_find_group_by_gid(LwqqClient *lc, const char *groupnumber);
 
 /** 
  * Find group member object by member's uin
@@ -261,6 +302,10 @@ LwqqGroup *lwqq_group_find_group_by_gid(LwqqClient *lc, const char *gid);
  */
 LwqqBuddy *lwqq_group_find_group_member_by_uin(LwqqGroup *group, const char *uin);
 
+const char* lwqq_status_to_str(LWQQ_STATUS status);
+LWQQ_STATUS lwqq_status_from_str(const char* str);
+//return zero means continue.>1 means abort
+typedef int (*LWQQ_PROGRESS)(void* data,size_t now,size_t total);
 /************************************************************************/
 
 #endif  /* LWQQ_TYPE_H */

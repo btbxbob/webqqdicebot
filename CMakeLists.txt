@@ -9,6 +9,6 @@ if(WIN32)
 #pkg_check_modules(ICONV REQUIRED iconv)
 endif(WIN32)
 #pkg_check_modules(EVENT REQUIRED libevent)
-add_definitions(-std=gnu99)
+add_definitions(-std=gnu99 -O0 -g3 -Wall)
 
 add_subdirectory(src)

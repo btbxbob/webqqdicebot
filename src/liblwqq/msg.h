@@ -13,6 +13,7 @@
 
 #include <pthread.h>
 #include "queue.h"
+#include "type.h"
 
 #define LWQQ_CONTENT_STRING 0
 #define LWQQ_CONTENT_FACE 1
@@ -30,6 +31,18 @@ typedef struct LwqqMsgMessage {
     char *from;
     char *to;
     time_t time;
+    
+    //added by bx from pidgin-lwqq
+    union{
+    char *send; /* only group use it to identify who send the group message */
+    char *id;   /* only sess msg use it.means gid */
+    };
+    union{
+    char *group_code; /* only avaliable in group message */
+    char *group_sig;
+    };
+    char *msg_id;
+    int msg_id2;
 
     /* For font  */
     char *f_name;
@@ -125,5 +138,9 @@ void lwqq_recvmsg_free(LwqqRecvMsgList *list);
 int lwqq_msg_send(void *client, LwqqMsg *msg);
 int lwqq_msg_send2(void *client, const char *to, const char *content);
 /*  LwqqSendMsg API */
+//new send api from pidgin-lwqq by bx
+int lwqq_msg_send_simple(LwqqClient* lc,int type,const char* to,const char* message);
+int lwqq_msg_send_buddy(LwqqClient * lc, const char *to, const char * msg);
+int lwqq_msg_send_group(LwqqClient * lc, const char *to, const char * msg);
 
 #endif  /* LWQQ_MSG_H */

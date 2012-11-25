@@ -33,6 +33,7 @@
 #include "md5.h"
 #include "url.h"
 #include "json.h"
+#include "msg.h"
 
 /* URL for webqq login */
 #define LWQQ_URL_LOGIN_HOST "http://ptlogin2.qq.com"
