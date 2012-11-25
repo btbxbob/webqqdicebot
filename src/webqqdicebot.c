@@ -324,8 +324,6 @@ static void handle_new_msg(LwqqRecvMsg *recvmsg)
         LwqqMsgMessage *mmsg = msg->opaque;
         char buf[1024] = {0};
         LwqqMsgContent *c;
-        char sender[128];
-        //sender=mmsg->from;
         TAILQ_FOREACH(c, &mmsg->content, entries) 
         {
             if (c->type == LWQQ_CONTENT_STRING) {
@@ -336,23 +334,45 @@ static void handle_new_msg(LwqqRecvMsg *recvmsg)
         }
         //char qun_name[128];
         //char sender_name[128];
-        printf("group_code:%s\n",mmsg->group_code);
-        printf("from:%s\n",mmsg->from);
-        printf("send:%s\n",mmsg->send);
+        //printf("group_code:%s\n",mmsg->group_code);
+        //printf("from:%s\n",mmsg->from);
+        //printf("send:%s\n",mmsg->send);
         LwqqGroup *senderGroup=lwqq_group_find_group_by_gid(lc, mmsg->from);
-        LwqqSimpleBuddy *senderBuddy=lwqq_group_find_group_member_by_uin(senderGroup,mmsg->send);
-        
+        LwqqSimpleBuddy *senderBuddy;
+        char senderName[64];
+        char groupName[64];
         if (!senderGroup)
+        {
 			printf("senderGroup is null\n");
+			strcpy(groupName, mmsg->from);
+		}
 		else
-			printf("%s\n", senderGroup->name);
+		{
+			senderBuddy=lwqq_group_find_group_member_by_uin(senderGroup,mmsg->send);
+			if(senderGroup->name)
+				strcpy(groupName, senderGroup->name);
+			else
+				strcpy(groupName, mmsg->from);
+		}
 		if (!senderBuddy)
+		{
 			printf("senderBuddy is null\n");
-		else
-			printf("%s\n", senderBuddy->nick);
-        //strcpy(qun_name,msgGroup->name);
-        //strcpy(sender_name,lwqq_group_find_group_member_by_uin(msgGroup, mmsg->send)->nick);
-        printf("%s[%s]:%s\n", _TEXT(""), _TEXT(""), _TEXT(buf));
+			strcpy(senderName, mmsg->send);
+		}
+		else 
+		{
+			if (senderBuddy->card)
+			{
+				strcpy(senderName, senderBuddy->card);
+			}else if (senderBuddy->nick)
+			{
+				strcpy(senderName, senderBuddy->nick);
+			}else
+			{
+				strcpy(senderName,"EMPTY");
+			}
+		}
+        printf("%s[%s]:%s\n", _TEXT(groupName), _TEXT(senderName), _TEXT(buf));
     } else if (msg->type == LWQQ_MT_STATUS_CHANGE) {
         LwqqMsgStatusChange *status = msg->opaque;
         printf("Receive status change: %s - > %s\n", 
@@ -430,21 +450,48 @@ static void *recvmsg_thread(void *list)
 }
 
 //thread that handle friends info(maybe)
-static void *info_thread(void *lc)
+static void *info_thread(void *lc_v)
 {
+	LwqqClient *lc=lc_v;
     LwqqErrorCode err;
     lwqq_info_get_friends_info(lc, &err);
+    lwqq_info_get_all_friend_qqnumbers(lc, &err);
+        //init member qqnumber
     //lwqq_info_get_all_friend_qqnumbers(lc, &err);
+    if (err != LWQQ_EC_OK) printf("get qqnumbers list error.\n");
+    
+    //init group list
+    lwqq_info_get_group_name_list(lc, &err);
+    if (err != LWQQ_EC_OK)
+    {
+		printf("get group name list error.\n");
+	}
+	//init group member list
+	LwqqGroup *group;
+	LIST_FOREACH(group, &lc->groups, entries)
+	{
+		printf("start to fetch Group:%s\n", group->name);
+		lwqq_info_get_group_detail_info(lc,group,&err);
+		if (err != LWQQ_EC_OK)
+		{
+			printf("get group member name list error. Try again.\n");
+			lwqq_info_get_group_detail_info(lc,group,&err);
+			if (err != LWQQ_EC_OK) printf("still error, abort.\n");
+		}
+	}
+	printf("done getting infos.\n");
     pthread_exit(NULL);
 }
 
 //maybe just for windows
+#if(_WIN32)
 static int lua_to_gb(lua_State *L)
 {
     const char *input=luaL_checkstring(L,1);
     printf("%s\n",_TEXT((char *)input));
     return 0;
 }
+#endif
 
 int main(int argc, char **argv)
 {
@@ -487,13 +534,7 @@ int main(int argc, char **argv)
     }
     //login success
     lwqq_log(LOG_NOTICE, "Login successfully\n");
-    
-    lwqq_info_get_group_name_list(lc, &err);
-    if (err != LWQQ_EC_OK)
-    {
-		printf("get group name list error.\n");
-	}
-    
+	
     //3. into multi thread part, to receive & process msg.
     /* Initialize thread */
     for (int i = 0; i < 2; ++i) {

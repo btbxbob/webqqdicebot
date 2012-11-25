@@ -862,7 +862,7 @@ void lwqq_info_get_group_detail_info(LwqqClient *lc, LwqqGroup *group,
     if (!req) {
         goto done;
     }
-    req->set_header(req, "Referer", "http://s.web2.qq.com/proxy.html?v=20101025002");
+    req->set_header(req, "Referer", "http://s.web2.qq.com/proxy.html?v=201211141500");
     req->set_header(req, "Content-Transfer-Encoding", "binary");
     req->set_header(req, "Content-type", "utf-8");
     cookies = lwqq_get_cookies(lc);
@@ -898,7 +898,7 @@ void lwqq_info_get_group_detail_info(LwqqClient *lc, LwqqGroup *group,
      */
     ret = json_parse_document(&json, req->response);
     if (ret != JSON_OK) {
-        lwqq_log(LOG_ERROR, "Parse json object of groups error: %s\n", req->response);
+        lwqq_log(LOG_ERROR, "Parse json object of groups error code: %d\n", ret);
         if (err)
             *err = LWQQ_EC_ERROR;
         goto done;
