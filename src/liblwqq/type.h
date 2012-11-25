@@ -131,7 +131,7 @@ typedef struct LwqqGroup {
     char *option;
 
     LIST_ENTRY(LwqqGroup) entries;
-    LIST_HEAD(, LwqqBuddy) members; /** < QQ Group members */
+    LIST_HEAD(, LwqqSimpleBuddy) members; /** < QQ Group members */
 } LwqqGroup;
 
 typedef struct LwqqVerifyCode {
@@ -300,7 +300,7 @@ LwqqGroup *lwqq_group_find_group_by_gid(LwqqClient *lc, const char *groupnumber)
  * 
  * @return A LwqqBuddy instance 
  */
-LwqqBuddy *lwqq_group_find_group_member_by_uin(LwqqGroup *group, const char *uin);
+LwqqSimpleBuddy *lwqq_group_find_group_member_by_uin(LwqqGroup *group, const char *uin);
 
 const char* lwqq_status_to_str(LWQQ_STATUS status);
 LWQQ_STATUS lwqq_status_from_str(const char* str);

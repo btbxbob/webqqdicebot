@@ -310,7 +310,7 @@ LwqqGroup *lwqq_group_new()
  */
 void lwqq_group_free(LwqqGroup *group)
 {
-    LwqqBuddy *m_entry, *m_next;
+    LwqqSimpleBuddy *m_entry, *m_next;
     if (!group)
         return ;
 
@@ -332,7 +332,7 @@ void lwqq_group_free(LwqqGroup *group)
     /* Free Group members list */
     LIST_FOREACH_SAFE(m_entry, &group->members, entries, m_next) {
         LIST_REMOVE(m_entry, entries);
-        lwqq_buddy_free(m_entry);
+        lwqq_simple_buddy_free(m_entry);
     }
 	
     s_free(group);
@@ -384,9 +384,9 @@ LwqqGroup *lwqq_group_find_group_by_groupnumber(LwqqClient *lc, const char *grou
  * 
  * @return A LwqqBuddy instance 
  */
-LwqqBuddy *lwqq_group_find_group_member_by_uin(LwqqGroup *group, const char *uin)
+LwqqSimpleBuddy *lwqq_group_find_group_member_by_uin(LwqqGroup *group, const char *uin)
 {
-    LwqqBuddy *member;
+    LwqqSimpleBuddy *member;
     
     if (!group || !uin)
         return NULL;

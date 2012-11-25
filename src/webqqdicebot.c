@@ -151,7 +151,7 @@ static int list_f(int argc, char **argv)
         return 0;
     }
 
-    if (!strcmp(argv[1], "all")) {
+    if (!strcmp(argv[1], "buddy")) {
         /* List all buddies */
         LwqqBuddy *buddy;
         LIST_FOREACH(buddy, &lc->friends, entries) {
@@ -172,7 +172,31 @@ static int list_f(int argc, char **argv)
 			}
             printf("Buddy info: %s\n", buf);
         }
-    } else {
+    }else if (!strcmp(argv[1], "group"))
+    {
+		printf("Group info:\n");
+		LwqqGroup *group;
+		LIST_FOREACH(group, &lc->groups, entries)
+		{
+			if (!group->gid)
+			{
+				printf("Group info empty\n");
+				return 0;
+			}
+			snprintf(buf, sizeof(buf), "gid:%s, ", group->gid);
+			if (group->name) {
+                strcat(buf, "name:");
+                strcat(buf, group->name);
+                strcat(buf, ", ");
+            }
+            if (group->account) {
+                strcat(buf, "account:");
+                strcat(buf, group->account);
+                strcat(buf, ", ");
+            }
+			printf("Group info: %s\n", buf);
+		}
+	}else {
         /* Show buddies whose uin is argv[1] */
         LwqqBuddy *buddy;
         LIST_FOREACH(buddy, &lc->friends, entries) {
@@ -315,8 +339,8 @@ static void handle_new_msg(LwqqRecvMsg *recvmsg)
         printf("group_code:%s\n",mmsg->group_code);
         printf("from:%s\n",mmsg->from);
         printf("send:%s\n",mmsg->send);
-        LwqqGroup *senderGroup=lwqq_group_find_group_by_gid(lc, mmsg->group_code);
-        LwqqBuddy *senderBuddy=lwqq_buddy_find_buddy_by_uin(lc, mmsg->send);
+        LwqqGroup *senderGroup=lwqq_group_find_group_by_gid(lc, mmsg->from);
+        LwqqSimpleBuddy *senderBuddy=lwqq_group_find_group_member_by_uin(senderGroup,mmsg->send);
         
         if (!senderGroup)
 			printf("senderGroup is null\n");
@@ -463,6 +487,12 @@ int main(int argc, char **argv)
     }
     //login success
     lwqq_log(LOG_NOTICE, "Login successfully\n");
+    
+    lwqq_info_get_group_name_list(lc, &err);
+    if (err != LWQQ_EC_OK)
+    {
+		printf("get group name list error.\n");
+	}
     
     //3. into multi thread part, to receive & process msg.
     /* Initialize thread */
