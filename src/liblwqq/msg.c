@@ -22,6 +22,18 @@
 #include "queue.h"
 #include "unicode.h"
 
+//for windows
+#if defined(_WIN32) || defined(_WIN64)
+    #include "../strtok_r.h"
+    #include <windows.h>
+    #include <iconv.h>
+    #include "../utf82gbk.h"
+    #define sleep(n) Sleep(1000 * n)
+    #define _TEXT utf82gbk
+#else
+    #define _TEXT
+#endif
+
 static void *start_poll_msg(void *msg_list);
 static void lwqq_recvmsg_poll_msg(struct LwqqRecvMsgList *list);
 static json_t *get_result_json_object(json_t *json);
@@ -77,6 +89,7 @@ void lwqq_recvmsg_free(LwqqRecvMsgList *list)
 LwqqMsg *lwqq_msg_new(LwqqMsgType type)
 {
     LwqqMsg *msg = NULL;
+    LwqqMsgMessage* mmsg;
 
     msg = s_malloc0(sizeof(*msg));
     msg->type = type;
@@ -84,8 +97,10 @@ LwqqMsg *lwqq_msg_new(LwqqMsgType type)
     switch (type) {
     case LWQQ_MT_BUDDY_MSG:
     case LWQQ_MT_GROUP_MSG:
-        msg->opaque = s_malloc0(sizeof(LwqqMsgMessage));
-        TAILQ_INIT(&((LwqqMsgMessage*)msg->opaque)->content);
+        mmsg = s_malloc0(sizeof(LwqqMsgMessage));
+        mmsg->type = type;
+        TAILQ_INIT(&mmsg->content);
+        msg->opaque = mmsg;
         break;
     case LWQQ_MT_STATUS_CHANGE:
         msg->opaque = s_malloc0(sizeof(LwqqMsgStatusChange));
@@ -674,6 +689,153 @@ int lwqq_msg_send2(void *client, const char *to, const char *content)
     lwqq_msg_free(msg);
     return ret;
 }
+
+//copy from pidgin-lwqq
+///low level special char mapping
+static void parse_unescape(char* source,char *buf,int buf_len)
+{
+    char* ptr = source;
+    size_t idx;
+    while(*ptr!='\0'){
+        idx = strcspn(ptr,"\n\t\\;&\"+");
+        if(ptr[idx] == '\0'){
+            strcpy(buf,ptr);
+            buf+=idx;
+            break;
+        }
+        strncpy(buf,ptr,idx);
+        buf+=idx;
+        switch(ptr[idx]){
+            //note buf point the end position
+            case '\n': strcpy(buf,"\\\\n");break;
+            case '\t': strcpy(buf,"\\\\t");break;
+            case '\\': strcpy(buf,"\\\\\\\\");break;
+            //i dont know why ; is not worked.so we use another expression
+            case ';' : strcpy(buf,"\\u003B");break;
+            case '&' : strcpy(buf,"\\u0026");break;
+            case '"' : strcpy(buf,"\\\\\\\"");break;
+            case '+' : strcpy(buf,"\\u002B");break;
+        }
+        ptr+=idx+1;
+        buf+=strlen(buf);
+    }
+    *buf = '\0';
+}
+
+#define LEFT "\\\""
+#define RIGHT "\\\""
+#define KEY(key) "\\\""key"\\\""
+
+static char* content_parse_string(LwqqMsgMessage* msg,int msg_type,int *has_cface)
+{
+    //not thread safe. 
+    //you need ensure only one thread send msg in one time.
+    static char buf[8192];
+    strcpy(buf,"\"[");
+    LwqqMsgContent* c;
+
+    TAILQ_FOREACH(c,&msg->content,entries){
+        switch(c->type){
+            case LWQQ_CONTENT_FACE:
+                format_append(buf,"["KEY("face")",%d],",c->data.face);
+                break;
+            case LWQQ_CONTENT_STRING:
+                strcat(buf,LEFT);
+                parse_unescape(c->data.str,buf+strlen(buf),sizeof(buf)-strlen(buf));
+                strcat(buf,RIGHT",");
+                break;
+        }
+    }
+    snprintf(buf+strlen(buf),sizeof(buf)-strlen(buf),
+            "["KEY("font")",{"
+            KEY("name")":"KEY("%s")","
+            KEY("size")":"KEY("%d")","
+            KEY("style")":[%d,%d,%d],"
+            KEY("color")":"KEY("%s")
+            "}]]\"",
+            msg->f_name,msg->f_size,
+            msg->f_style.a,msg->f_style.b,msg->f_style.c,
+            msg->f_color);
+    return buf;
+}
+
+void lwqq_msg_send3(LwqqClient *lc, LwqqMsg *msg)
+{
+    LwqqHttpRequest *req = NULL;  
+    char *content = NULL;
+    static char data[8192];
+    data[0] = '\0';
+    LwqqMsgMessage *mmsg;
+    const char *apistr;
+    int has_cface = 0;
+
+    if (!msg){
+        goto failed;
+    }
+    mmsg = msg->opaque;
+
+    //this would check msg content to see if it need do upload picture first
+    LwqqMsgContent* c;
+    int will_upload = 0;
+
+    //we do send msg
+    format_append(data,"r={");
+    content = content_parse_string(mmsg,msg->type,&has_cface);
+    if(msg->type == LWQQ_MT_BUDDY_MSG){
+        format_append(data,"\"to\":%s,",mmsg->to);
+        apistr = "send_buddy_msg2";
+    }else if(msg->type == LWQQ_MT_GROUP_MSG){
+        format_append(data,"\"group_uin\":%s,",mmsg->to);
+        /*
+        if(has_cface){
+            format_append(data,"\"group_code\":%s,\"key\":\"%s\",\"sig\":\"%s\",",
+                    mmsg->group.group_code,lc->gface_key,lc->gface_sig);
+        }
+        */
+        apistr = "send_qun_msg2";
+    }
+    /*
+    else if(msg->type == LWQQ_MT_SESS_MSG){
+        format_append(data,"\"to\":%s,\"group_sig\":\"%s\",",mmsg->to,mmsg->sess.group_sig);
+        apistr = "send_sess_msg2";
+    }else if(msg->type == LWQQ_MT_DISCU_MSG){
+        format_append(data,"\"did\":\"%s\",",mmsg->discu.did);
+        apistr = "send_discu_msg2";
+    }
+    */
+    format_append(data,
+            //"\"face\":0,"
+            "\"content\":%s,"
+            "\"msg_id\":%ld,"
+            "\"clientid\":\"%s\","
+            "\"psessionid\":\"%s\"}",
+            content,lc->msg_id,lc->clientid,lc->psessionid);
+    format_append(data,"&clientid=%s&psessionid=%s",lc->clientid,lc->psessionid);
+    puts(_TEXT(data));
+
+    /* Create a POST request */
+    char url[512];
+    snprintf(url, sizeof(url), "%s/channel/%s", "http://d.web2.qq.com",apistr);
+    req = lwqq_http_create_default_request(url, NULL);
+    if (!req) {
+        goto failed;
+    }
+    req->set_header(req, "Referer", "http://d.web2.qq.com/proxy.html?v=20101025002");
+    req->set_header(req, "Content-Transfer-Encoding", "binary");
+    req->set_header(req, "Content-type", "application/x-www-form-urlencoded");
+    req->set_header(req, "Cookie", lwqq_get_cookies(lc));
+    
+    int ret = req->do_request(req, 1, data);
+    if (ret || req->http_code != 200) {
+        printf("send msg failed\n");
+        goto failed;
+    }
+    return 0;
+
+failed:
+    lwqq_http_request_free(req);
+    return NULL;
+}
     
 int lwqq_msg_send_simple(LwqqClient* lc,int type,const char* to,const char* message)
 {
@@ -684,15 +846,17 @@ int lwqq_msg_send_simple(LwqqClient* lc,int type,const char* to,const char* mess
     LwqqMsgMessage *mmsg = msg->opaque;
     mmsg->to = s_strdup(to);
     mmsg->f_name = "宋体";
-    mmsg->f_size = 13;
-    //mmsg->f_style.b = 0,mmsg->f_style.i = 0,mmsg->f_style.u = 0;
+    mmsg->f_size = 9;
+    mmsg->f_style.a = 0,mmsg->f_style.b = 0,mmsg->f_style.c = 0;
     mmsg->f_color = "000000";
     LwqqMsgContent * c = s_malloc(sizeof(*c));
     c->type = LWQQ_CONTENT_STRING;
     c->data.str = s_strdup(message);
     TAILQ_INSERT_TAIL(&mmsg->content,c,entries);
 
-    lwqq_msg_send(lc,msg);
+    //LWQQ_SYNC_BEGIN();
+    lwqq_msg_send3(lc,msg);
+    //LWQQ_SYNC_END();
 
     mmsg->f_name = NULL;
     mmsg->f_color = NULL;
@@ -707,31 +871,7 @@ int lwqq_msg_send_buddy(LwqqClient * lc, const char *to, const char * msg)
 	return lwqq_msg_send_simple(lc, LWQQ_MT_BUDDY_MSG, to, msg);
 }
 
-int lwqq_msg_send_group(LwqqClient * lc, const char *to, const char * content)
+int lwqq_msg_send_group(LwqqClient * lc, const char *to, const char * msg)
 {
-    int ret = 0;
-    LwqqMsg *msg = NULL;
-    LwqqMsgMessage *mmsg = NULL;
-    LwqqMsgContent *c = NULL;
-    //LwqqClient *lc = client;
-    
-    if (!lc || !to || !content) {
-        return -1;
-    }
-    
-    msg = lwqq_msg_new(LWQQ_MT_GROUP_MSG);
-    if (!msg) {
-        return -1;
-    }
-
-    mmsg = msg->opaque;
-    mmsg->to = s_strdup(to);
-    c = s_malloc0(sizeof(*c));
-    c->type = LWQQ_CONTENT_STRING;
-    c->data.str = s_strdup(content);
-    TAILQ_INSERT_HEAD(&mmsg->content, c, entries);
-
-    ret = lwqq_msg_send(lc, msg);
-    lwqq_msg_free(msg);
-    return ret;
+    return lwqq_msg_send_simple(lc, LWQQ_MT_GROUP_MSG, to, msg);
 }

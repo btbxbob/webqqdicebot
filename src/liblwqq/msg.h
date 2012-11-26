@@ -17,6 +17,8 @@
 
 #define LWQQ_CONTENT_STRING 0
 #define LWQQ_CONTENT_FACE 1
+#define LWQQ_CONTENT_OFFPIC 2
+#define LWQQ_CONTENT_CFACE 3
 
 typedef struct LwqqMsgContent {
     int type;
@@ -28,6 +30,7 @@ typedef struct LwqqMsgContent {
 } LwqqMsgContent ;
 
 typedef struct LwqqMsgMessage {
+    int type;
     char *from;
     char *to;
     time_t time;

@@ -70,6 +70,7 @@ static CmdInfo cmdtab[] = {
     {"quit", "q", quit_f},
     {"list", "l", list_f},
     {"send", "s", send_f},
+    {"sendgroup", "g", send_f},
     {"info", "i", info_f},
     {NULL, NULL, NULL},
 };
@@ -227,7 +228,18 @@ static int send_f(int argc, char **argv)
     if (argc != 3) {
         return 0;
     }
-    lwqq_msg_send2(lc, argv[1], argv[2]);
+    //lwqq_msg_send2(lc, argv[1], argv[2]);
+    lwqq_msg_send_buddy(lc, argv[1], argv[2]);
+    return 0;
+}
+static int sendgroup_f(int argc, char **argv)
+{
+    /* argv look like: {"send", "74357485" "hello"} */
+    if (argc != 3) {
+        return 0;
+    }
+    //lwqq_msg_send2(lc, argv[1], argv[2]);
+    lwqq_msg_send_group(lc, argv[1], argv[2]);
     return 0;
 }
 static int info_f(int argc, char **argv)
