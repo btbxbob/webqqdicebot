@@ -408,7 +408,19 @@ static void handle_new_msg(LwqqRecvMsg *recvmsg)
 				strcpy(senderName,"EMPTY");
 			}
 		}
+        //finally.
         printf("%s[%s]:%s\n", _TEXT(groupName), _TEXT(senderName), _TEXT(buf));
+        //we start call lua here
+        lua_getglobal(L, "main");
+        lua_pushstring(L, buf);
+        lua_pushstring(L, ""); //time here
+        lua_pushstring(L, senderName);
+        lua_pushstring(L, mmsg->send);
+        lua_pushstring(L, groupName);
+        lua_pushstring(L, mmsg->from);
+        //lua_pcall(L, 6, 0, 0);
+        if (lua_pcall(L, 6, 0, 0) != 0)
+            printf(lua_tostring(L, -1));
     } else if (msg->type == LWQQ_MT_STATUS_CHANGE) {
         LwqqMsgStatusChange *status = msg->opaque;
         printf("Receive status change: %s - > %s\n", 
@@ -473,13 +485,14 @@ static void *recvmsg_thread(void *list)
         if (SIMPLEQ_EMPTY(&l->head)) {
             /* No message now, wait 100ms */
             pthread_mutex_unlock(&l->mutex);
-            sleep(1);
+            sleep(1/10);
             continue;
         }
         recvmsg = SIMPLEQ_FIRST(&l->head);
         SIMPLEQ_REMOVE_HEAD(&l->head, entries);
         pthread_mutex_unlock(&l->mutex);
         handle_new_msg(recvmsg);
+        sleep(1/20);
     }
 
     pthread_exit(NULL);
@@ -522,13 +535,39 @@ static void *info_thread(void *lc_v)
 
 //maybe just for windows
 #if(_WIN32)
-static int lua_to_gb(lua_State *L)
+static int lua_print(lua_State *L)
 {
     const char *input=luaL_checkstring(L,1);
     printf("%s\n",_TEXT((char *)input));
     return 0;
 }
 #endif
+
+static int lua_to_utf8(lua_State *L)
+{
+    const char *input=luaL_checkstring(L,1);
+    char * output=gbk2utf8((char *)input);
+    lua_pushstring(L,output);
+    return 1;
+}
+
+//lua binding
+static int lua_say_qun(lua_State *L)
+{
+    const char *msg=luaL_checkstring(L,1);
+    const char * qun_id=luaL_checkstring(L,2);
+    lwqq_msg_send_group(lc,qun_id,msg);
+    printf("[LUA](%s):%s",_TEXT((char *)qun_id),_TEXT((char *)msg));
+    return 0;
+}
+
+static int lua_say_buddy(lua_State *L)
+{
+    const char *msg=luaL_checkstring(L,1);
+    const char *buddy_id=luaL_checkstring(L,2);
+    lwqq_msg_send_buddy(lc,buddy_id,msg);
+    return 0;
+}
 
 int main(int argc, char **argv)
 {
@@ -540,9 +579,10 @@ int main(int argc, char **argv)
     //HACK:
     //if is windows, over write lua's print
     #if(_WIN32)
-        lua_pushcfunction(L, lua_to_gb);
+        lua_pushcfunction(L, lua_print);
         lua_setglobal(L, "print");
     #endif
+
     //load bot's pass via lua
     char uid[128];
     char password[32];
@@ -551,6 +591,17 @@ int main(int argc, char **argv)
     strcpy(uid,lua_tostring(L,-1));
     lua_getglobal(L,"password");
     strcpy(password,lua_tostring(L,-1));
+
+    //load main.lua
+    if (luaL_dofile(L,"main.lua")!= 0 )
+    {
+        printf(lua_tostring(L, -1));
+    }
+    //regist lua method
+    lua_pushcfunction(L, lua_say_buddy);
+    lua_setglobal(L, "say_buddy");
+    lua_pushcfunction(L, lua_say_qun);
+    lua_setglobal(L, "say_qun");
 
 	LwqqErrorCode err;
 	pthread_t tid[2];
