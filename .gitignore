@@ -8,6 +8,7 @@
 /src/libghttp/.deps/libghttp_la-http_uri.Plo
 /src/libghttp/.libs/libghttp.la
 /src/libghttp/.libs/libghttp.lai
+/src/settings.lua
 *.o
 *.lib
 *.a

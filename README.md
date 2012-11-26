@@ -9,3 +9,6 @@ a dice bot base on lwqq
 * luajit
 * sqlite3
 * levelDB
+
+base on: https://github.com/mathslinux/lwqq
+thanks to: https://github.com/xiehuc/pidgin-lwqq

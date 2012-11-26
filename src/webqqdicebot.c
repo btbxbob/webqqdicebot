@@ -59,6 +59,7 @@ static int help_f(int argc, char **argv);
 static int quit_f(int argc, char **argv);
 static int list_f(int argc, char **argv);
 static int send_f(int argc, char **argv);
+static int info_f(int argc, char **argv);
 typedef struct CmdInfo {
 	const char	*name;
 	const char	*altname;
@@ -69,6 +70,7 @@ static CmdInfo cmdtab[] = {
     {"quit", "q", quit_f},
     {"list", "l", list_f},
     {"send", "s", send_f},
+    {"info", "i", info_f},
     {NULL, NULL, NULL},
 };
 
@@ -194,7 +196,7 @@ static int list_f(int argc, char **argv)
                 strcat(buf, group->account);
                 strcat(buf, ", ");
             }
-			printf("Group info: %s\n", buf);
+			printf("Group info: %s\n", _TEXT(buf));
 		}
 	}else {
         /* Show buddies whose uin is argv[1] */
@@ -211,7 +213,7 @@ static int list_f(int argc, char **argv)
                     strcat(buf, "markname:");
                     strcat(buf, buddy->markname);
                 }
-                printf("Buddy info: %s\n", buf);
+                printf("Buddy info: %s\n", _TEXT(buf));
                 break;
             }
         }
@@ -227,6 +229,40 @@ static int send_f(int argc, char **argv)
     }
     lwqq_msg_send2(lc, argv[1], argv[2]);
     return 0;
+}
+static int info_f(int argc, char **argv)
+{
+    LwqqErrorCode err;
+    lwqq_info_get_friends_info(lc, &err);
+    lwqq_info_get_all_friend_qqnumbers(lc, &err);
+        //init member qqnumber
+    //lwqq_info_get_all_friend_qqnumbers(lc, &err);
+    if (err != LWQQ_EC_OK) printf("get qqnumbers list error.\n");
+    
+    //init group list
+    //lwqq_info_get_group_name_list(lc, &err);
+    if (err != LWQQ_EC_OK)
+    {
+        printf("get group name list error.\n");
+    }
+    //init group member list
+    LwqqGroup *group;
+    LIST_FOREACH(group, &lc->groups, entries)
+    {
+        if (!group->account)
+        {
+            printf("start to fetch Group:%s\n", _TEXT(group->name));
+            lwqq_info_get_group_detail_info(lc,group,&err);
+            if (err != LWQQ_EC_OK)
+            {
+                printf("get group member name list error. Try again.\n");
+                sleep(2);
+                lwqq_info_get_group_detail_info(lc,group,&err);
+                if (err != LWQQ_EC_OK) printf("still error, abort.\n");
+            }
+        }
+    }
+    printf("done getting infos.\n");
 }
 //-----------------------
 
@@ -470,11 +506,12 @@ static void *info_thread(void *lc_v)
 	LwqqGroup *group;
 	LIST_FOREACH(group, &lc->groups, entries)
 	{
-		printf("start to fetch Group:%s\n", group->name);
+		printf("start to fetch Group:%s\n", _TEXT(group->name));
 		lwqq_info_get_group_detail_info(lc,group,&err);
 		if (err != LWQQ_EC_OK)
 		{
 			printf("get group member name list error. Try again.\n");
+            sleep(2);
 			lwqq_info_get_group_detail_info(lc,group,&err);
 			if (err != LWQQ_EC_OK) printf("still error, abort.\n");
 		}

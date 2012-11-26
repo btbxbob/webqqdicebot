@@ -431,7 +431,7 @@ static void parse_groups_gmarklist_child(LwqqClient *lc, json_t *json)
 void lwqq_info_get_group_name_list(LwqqClient *lc, LwqqErrorCode *err)
 {
 
-  	lwqq_log(LOG_DEBUG, "in function.");
+  	//lwqq_log(LOG_DEBUG, "in function.");
 
     char msg[256];
     char url[512];
@@ -835,7 +835,7 @@ static void parse_groups_stats_child(LwqqClient *lc, LwqqGroup *group,  json_t *
 void lwqq_info_get_group_detail_info(LwqqClient *lc, LwqqGroup *group,
                                       LwqqErrorCode *err)
 {
-    lwqq_log(LOG_DEBUG, "in function.");
+    //lwqq_log(LOG_DEBUG, "in function.");
 
     char url[512];
     LwqqHttpRequest *req = NULL;  
