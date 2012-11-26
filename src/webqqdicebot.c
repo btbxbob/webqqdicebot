@@ -164,7 +164,7 @@ static int list_f(int argc, char **argv)
             snprintf(buf, sizeof(buf), "uin:%s, ", buddy->uin);
             if (buddy->nick) {
                 strcat(buf, "nick:");
-                strcat(buf, buddy->nick);
+                strcat(buf, _TEXT(buddy->nick));
                 strcat(buf, ", ");
             }
             if (buddy->qqnumber){

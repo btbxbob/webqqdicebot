@@ -707,7 +707,31 @@ int lwqq_msg_send_buddy(LwqqClient * lc, const char *to, const char * msg)
 	return lwqq_msg_send_simple(lc, LWQQ_MT_BUDDY_MSG, to, msg);
 }
 
-int lwqq_msg_send_group(LwqqClient * lc, const char *to, const char * msg)
+int lwqq_msg_send_group(LwqqClient * lc, const char *to, const char * content)
 {
-	return lwqq_msg_send_simple(lc, LWQQ_MT_GROUP_MSG, to, msg);
+    int ret = 0;
+    LwqqMsg *msg = NULL;
+    LwqqMsgMessage *mmsg = NULL;
+    LwqqMsgContent *c = NULL;
+    //LwqqClient *lc = client;
+    
+    if (!lc || !to || !content) {
+        return -1;
+    }
+    
+    msg = lwqq_msg_new(LWQQ_MT_GROUP_MSG);
+    if (!msg) {
+        return -1;
+    }
+
+    mmsg = msg->opaque;
+    mmsg->to = s_strdup(to);
+    c = s_malloc0(sizeof(*c));
+    c->type = LWQQ_CONTENT_STRING;
+    c->data.str = s_strdup(content);
+    TAILQ_INSERT_HEAD(&mmsg->content, c, entries);
+
+    ret = lwqq_msg_send(lc, msg);
+    lwqq_msg_free(msg);
+    return ret;
 }
