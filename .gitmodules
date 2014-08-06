@@ -1,0 +1,3 @@
+[submodule "src/lwqq"]
+	path = src/lwqq
+	url = https://github.com/btbxbob/lwqq.git

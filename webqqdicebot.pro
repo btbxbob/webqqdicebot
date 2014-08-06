@@ -14,7 +14,12 @@ CONFIG   -= app_bundle
 
 TEMPLATE = app
 
-
 SOURCES += main.cpp
 
 HEADERS +=
+
+INCLUDEPATH += src/lwqq/lib
+INCLUDEPATH += src/lwqq-build
+
+LIBS += -L../webqqdicebot/src/lwqq-build/lib \
+        -llwqq
